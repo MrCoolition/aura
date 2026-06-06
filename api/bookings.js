@@ -1,0 +1,87 @@
+import { getSql, json, missingDatabasePayload, readJson } from "../server/db.js";
+
+export async function OPTIONS() {
+  return json({ ok: true });
+}
+
+export async function POST(request) {
+  const body = await readJson(request);
+  const taskSummary = String(body.taskSummary || "").trim();
+  const serviceCategory = String(body.serviceCategory || "home").trim();
+  const urgency = String(body.urgency || "today").trim();
+  const budgetCents = Number(body.budgetCents || 14000);
+  const market = String(body.market || process.env.AURA_DEFAULT_MARKET || "Miami").trim();
+
+  if (!taskSummary) {
+    return json({ ok: false, message: "taskSummary is required" }, 400);
+  }
+
+  const platformFeeBps = Number(process.env.AURA_PLATFORM_FEE_BPS || 1800);
+  const platformFeeCents = Math.round(budgetCents * (platformFeeBps / 10000));
+  const assistantPayoutCents = budgetCents - platformFeeCents;
+  const sql = await getSql();
+
+  if (!sql) {
+    return json(
+      missingDatabasePayload("booking", {
+        id: `demo_${Date.now()}`,
+        task_summary: taskSummary,
+        service_category: serviceCategory,
+        urgency,
+        market,
+        budget_cents: budgetCents,
+        platform_fee_cents: platformFeeCents,
+        assistant_payout_cents: assistantPayoutCents
+      })
+    );
+  }
+
+  const rows = await sql`
+    insert into service_requests (
+      client_name,
+      client_email,
+      service_category,
+      task_summary,
+      market,
+      urgency,
+      budget_cents,
+      ai_plan
+    )
+    values (
+      'AURA Web Client',
+      'demo@aura.local',
+      ${serviceCategory},
+      ${taskSummary},
+      ${market},
+      ${urgency},
+      ${budgetCents},
+      ${JSON.stringify({
+        platformFeeCents,
+        assistantPayoutCents,
+        source: "web-console"
+      })}::jsonb
+    )
+    returning id, status, service_category, task_summary, budget_cents, created_at
+  `;
+
+  return json({
+    ok: true,
+    mode: "database",
+    data: rows[0],
+    message: "Booking request saved to Neon. AURA is ready to match the best assistant."
+  });
+}
+
+export default {
+  async fetch(request) {
+    if (request.method === "OPTIONS") {
+      return OPTIONS(request);
+    }
+
+    if (request.method === "POST") {
+      return POST(request);
+    }
+
+    return json({ ok: false, message: `${request.method} is not supported` }, 405);
+  }
+};

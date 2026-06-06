@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="AURA is an AI powered marketplace to hire or become a personal assistant."
+    >
+    <title>AURA | Personal assistant marketplace</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <div class="app-shell" data-mode="hire">
+      <header class="topbar" aria-label="Primary">
+        <a class="brand-lockup" href="#home" aria-label="AURA home">
+          <span class="brand-mark" aria-hidden="true"><span></span></span>
+          <span>
+            <strong>AURA</strong>
+            <small>Personal assistants, on demand</small>
+          </span>
+        </a>
+        <nav class="topnav" aria-label="AURA sections">
+          <a href="#marketplace">Marketplace</a>
+          <a href="#calendar">Calendar</a>
+          <a href="#inventory">Inventory</a>
+          <a href="#earn">Earn</a>
+        </nav>
+        <div class="mode-switch" aria-label="Choose AURA mode">
+          <button class="mode-button is-active" data-mode-button="hire" type="button">Hire</button>
+          <button class="mode-button" data-mode-button="earn" type="button">Earn</button>
+        </div>
+      </header>
+
+      <main id="home">
+        <section class="hero-workbench" aria-labelledby="hero-title">
+          <div class="hero-media" aria-hidden="true">
+            <div class="aura-signal-mark">
+              <span class="aura-mark-core"></span>
+            </div>
+            <div class="aura-route-lines">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+          <div class="hero-copy">
+            <p class="eyebrow">AURA command center</p>
+            <h1 id="hero-title">Your life. Upgraded.</h1>
+            <p class="hero-lede">
+              Book vetted personal assistants for errands, home resets, admin, events, travel,
+              inventory, and the work that keeps stealing your day.
+            </p>
+            <div class="hero-actions">
+              <button class="primary-action" id="jumpToBooking" type="button">Find my assistant</button>
+              <button class="secondary-action" id="jumpToProvider" type="button">Start earning</button>
+            </div>
+          </div>
+
+          <section class="command-console" aria-label="AURA booking console">
+            <div class="console-header">
+              <div>
+                <p class="eyebrow">AI request builder</p>
+                <h2>What needs to be handled?</h2>
+              </div>
+              <span class="live-pill">Live in Miami</span>
+            </div>
+
+            <div class="chip-row" role="list" aria-label="Service categories">
+              <button class="service-chip is-active" data-service="home" type="button">Home reset</button>
+              <button class="service-chip" data-service="calendar" type="button">Calendar</button>
+              <button class="service-chip" data-service="errands" type="button">Errands</button>
+              <button class="service-chip" data-service="travel" type="button">Travel</button>
+              <button class="service-chip" data-service="inventory" type="button">Inventory</button>
+            </div>
+
+            <label class="field-label" for="taskInput">Request</label>
+            <textarea id="taskInput" rows="4">Reset the apartment before 6 PM, restock sparkling water, prep guest towels, and move dinner reservation if traffic gets bad.</textarea>
+
+            <div class="booking-grid">
+              <label>
+                <span>When</span>
+                <select id="timeSelect">
+                  <option value="urgent">ASAP, under 45 min</option>
+                  <option value="today" selected>Today, best slot</option>
+                  <option value="tomorrow">Tomorrow morning</option>
+                  <option value="recurring">Weekly recurring</option>
+                </select>
+              </label>
+              <label>
+                <span>Budget</span>
+                <select id="budgetSelect">
+                  <option value="85">$85 starter</option>
+                  <option value="140" selected>$140 premium</option>
+                  <option value="260">$260 elite</option>
+                  <option value="520">$520 full day</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="quote-strip" aria-live="polite">
+              <span>
+                <strong id="quotePrice">$140</strong>
+                client total
+              </span>
+              <span>
+                <strong id="assistantPayout">$115</strong>
+                assistant earns
+              </span>
+              <span>
+                <strong id="auraFee">$25</strong>
+                AURA fee
+              </span>
+            </div>
+
+            <div class="console-actions">
+              <button class="primary-action" id="bookRequest" type="button">Match now</button>
+              <button class="ghost-action" id="optimizeDay" type="button">Optimize day</button>
+            </div>
+            <p class="status-line" id="bookingStatus">AURA is watching weather, traffic, ETA, and assistant fit.</p>
+          </section>
+        </section>
+
+        <section class="metric-band" aria-label="AURA marketplace metrics">
+          <div>
+            <strong id="liveBookings">1,284</strong>
+            <span>tasks handled this week</span>
+          </div>
+          <div>
+            <strong>4.96</strong>
+            <span>average assistant rating</span>
+          </div>
+          <div>
+            <strong>18%</strong>
+            <span>platform take rate target</span>
+          </div>
+          <div>
+            <strong>11 min</strong>
+            <span>median match time</span>
+          </div>
+        </section>
+
+        <section class="work-grid" id="marketplace" aria-labelledby="marketplace-title">
+          <div class="section-heading">
+            <p class="eyebrow">Hire instantly</p>
+            <h2 id="marketplace-title">Elite assistants near you</h2>
+            <p>Every profile is built around trust, speed, taste, and repeat booking economics.</p>
+          </div>
+          <div class="assistant-list" id="assistantList" aria-live="polite"></div>
+        </section>
+
+        <section class="split-section" id="calendar" aria-labelledby="calendar-title">
+          <div class="section-heading">
+            <p class="eyebrow">Next gen AI calendar</p>
+            <h2 id="calendar-title">Smart booking and rescheduling</h2>
+            <p>AURA scores conflicts, travel time, urgency, and assistant availability before a booking lands.</p>
+          </div>
+          <div class="timeline" id="timeline"></div>
+          <div class="reschedule-panel">
+            <h3>Reschedule intelligence</h3>
+            <div id="calendarInsights"></div>
+          </div>
+        </section>
+
+        <section class="split-section" id="checklists" aria-labelledby="checklist-title">
+          <div class="section-heading">
+            <p class="eyebrow">Checklist studio</p>
+            <h2 id="checklist-title">Support playbooks that feel premium</h2>
+            <p>Cleaning, errands, hosting, and travel work is turned into verified steps with photo proof and client notes.</p>
+          </div>
+          <div class="checklist-board" id="checklistBoard"></div>
+        </section>
+
+        <section class="inventory-section" id="inventory" aria-labelledby="inventory-title">
+          <div class="section-heading">
+            <p class="eyebrow">Smart AI inventory</p>
+            <h2 id="inventory-title">Upload a shelf, closet, fridge, or supply room</h2>
+            <p>AURA creates a living home inventory, flags restock needs, and turns findings into assistant tasks.</p>
+          </div>
+          <div class="inventory-lab">
+            <label class="upload-zone" for="inventoryUpload">
+              <input id="inventoryUpload" type="file" accept="image/*">
+              <span>Drop or choose image</span>
+              <strong>Scan inventory</strong>
+            </label>
+            <div class="scan-preview">
+              <div id="inventoryPreview" class="scan-visual" aria-label="Inventory preview">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+            <div class="detection-list" id="detectionList" aria-live="polite"></div>
+          </div>
+        </section>
+
+        <section class="feedback-section" aria-labelledby="feedback-title">
+          <div class="section-heading">
+            <p class="eyebrow">Smart feedback loop</p>
+            <h2 id="feedback-title">Quality that compounds</h2>
+            <p>Clients rate outcomes, assistants get coaching, and AURA learns what premium means per household.</p>
+          </div>
+          <div class="feedback-console">
+            <div>
+              <label for="ratingRange">Service score</label>
+              <input id="ratingRange" type="range" min="1" max="5" step="0.5" value="4.5">
+              <output id="ratingOutput" for="ratingRange">4.5</output>
+            </div>
+            <div>
+              <label for="tipRange">Tip boost</label>
+              <input id="tipRange" type="range" min="0" max="80" step="5" value="20">
+              <output id="tipOutput" for="tipRange">$20</output>
+            </div>
+            <button class="primary-action" id="submitFeedback" type="button">Send feedback</button>
+            <p id="feedbackResult" class="status-line">No unresolved service issues.</p>
+          </div>
+        </section>
+
+        <section class="earn-section" id="earn" aria-labelledby="earn-title">
+          <div class="section-heading">
+            <p class="eyebrow">Be the assistant</p>
+            <h2 id="earn-title">Turn trust, taste, and hustle into revenue</h2>
+            <p>Assistants get route-smart tasks, premium clients, clear checklists, instant feedback, and transparent payouts.</p>
+          </div>
+          <div class="earn-grid">
+            <div>
+              <h3>Provider launchpad</h3>
+              <ul class="launch-list">
+                <li><span>1</span> Verify identity and preferred markets</li>
+                <li><span>2</span> Pick specialties and minimum rates</li>
+                <li><span>3</span> Accept AI bundled tasks with payout clarity</li>
+                <li><span>4</span> Grow repeat clients and premium badges</li>
+              </ul>
+            </div>
+            <div class="earnings-panel">
+              <span>Estimated weekly gross</span>
+              <strong id="weeklyGross">$1,860</strong>
+              <label for="hoursRange">Available hours</label>
+              <input id="hoursRange" type="range" min="8" max="45" value="24">
+              <small id="hoursOutput">24 hours at premium utilization</small>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <span>AURA</span>
+        <span>DREAM BEYOND ANYTHING. ANYONE CAN HAVE A PERSONAL ASSISTANT NOW.</span>
+      </footer>
+    </div>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
