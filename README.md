@@ -49,12 +49,12 @@ The root `index.html` fixes the previous Vercel 404.
 
 ## Auth0 Setup
 
-Create an Auth0 **Regular Web Application** and use the values from **Application Settings**. AURA uses a server-side callback and HttpOnly session cookie, so set `AUTH0_CLIENT_SECRET` in Vercel from the Auth0 application's client secret. Set `AUTH0_SECRET` to a long random value for signing AURA session cookies.
+Create an Auth0 **Regular Web Application** and use the values from **Application Settings**. AURA uses a root callback bridge, server-side token exchange, and HttpOnly session cookie, so set `AUTH0_CLIENT_SECRET` in Vercel from the Auth0 application's client secret. Set `AUTH0_SECRET` to a long random value for signing AURA session cookies.
 
 Allowed Callback URLs:
 
 ```text
-http://localhost:4173/api/auth/callback, https://aura-omega-rosy.vercel.app/api/auth/callback
+http://localhost:4173, https://aura-omega-rosy.vercel.app
 ```
 
 Allowed Logout URLs:

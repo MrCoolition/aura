@@ -1027,6 +1027,26 @@ async function requestHeaders(includeJson) {
   return includeJson ? { "Content-Type": "application/json" } : {};
 }
 
+function rootAuthCallbackSearch() {
+  const params = new URLSearchParams(window.location.search);
+  const hasAuthResult = (params.has("code") && params.has("state")) || (params.has("error") && params.has("state"));
+  if (!hasAuthResult) return "";
+
+  const callbackParams = new URLSearchParams();
+  ["code", "state", "error", "error_description"].forEach((key) => {
+    const value = params.get(key);
+    if (value) callbackParams.set(key, value);
+  });
+  return callbackParams.toString();
+}
+
+function forwardRootAuthCallback() {
+  const callbackSearch = rootAuthCallbackSearch();
+  if (!callbackSearch) return false;
+  window.location.replace(`/api/auth/callback?${callbackSearch}`);
+  return true;
+}
+
 function cleanAuthQuery(returnTo = window.location.pathname) {
   window.history.replaceState({}, document.title, returnTo || "/");
 }
@@ -1393,6 +1413,8 @@ async function ensureSignedIn(actionLabel) {
 }
 
 async function initAuth() {
+  if (forwardRootAuthCallback()) return;
+
   renderAuthState();
 
   try {

@@ -302,6 +302,10 @@ function safeReturnTo(value) {
   }
 }
 
+function authCallbackRedirectUri(baseUrl) {
+  return process.env.AUTH0_CALLBACK_URL || process.env.AUTH0_REDIRECT_URI || baseUrl;
+}
+
 function redirectResponse(location, cookies = []) {
   const headers = new Headers({ Location: location });
   cookies.forEach((cookie) => headers.append("Set-Cookie", cookie));
@@ -353,7 +357,7 @@ export async function createAuthLoginResponse(request) {
 
   const baseUrl = requestBaseUrl(request);
   const url = new URL(request.url);
-  const redirectUri = `${baseUrl}/api/auth/callback`;
+  const redirectUri = authCallbackRedirectUri(baseUrl);
   const state = randomBase64Url(32);
   const nonce = randomBase64Url(32);
   const codeVerifier = randomBase64Url(64);

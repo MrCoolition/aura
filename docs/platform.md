@@ -87,7 +87,7 @@ The app is intentionally zero-build for fast deployment. `index.html`, `styles.c
 
 ## Auth0 Security
 
-AURA uses an Auth0 Regular Web Application with Authorization Code + PKCE through Vercel Functions. `/api/auth/login` redirects to Auth0, `/api/auth/callback` exchanges the code server-side, and AURA stores a signed HttpOnly session cookie. `AUTH0_CLIENT_SECRET` is required for confidential Auth0 applications. `AUTH0_SECRET` signs AURA's session cookie. `AUTH0_AUDIENCE` is optional and should only be set to an Auth0 API Identifier that exists in the tenant.
+AURA uses an Auth0 Regular Web Application with Authorization Code + PKCE through Vercel Functions. `/api/auth/login` sends Auth0 back to the app root by default, the boot gate forwards `code/state` to `/api/auth/callback`, and the server exchanges the code before setting a signed HttpOnly session cookie. `AUTH0_CLIENT_SECRET` is required for confidential Auth0 applications. `AUTH0_SECRET` signs AURA's session cookie. `AUTH0_AUDIENCE` is optional and should only be set to an Auth0 API Identifier that exists in the tenant. If `AUTH0_CALLBACK_URL` or `AUTH0_REDIRECT_URI` is set, that exact URL must also be present in Auth0's Allowed Callback URLs.
 
 Signed-in users are upserted into `aura_users` by `auth_subject`, and their customization defaults are stored in `user_preferences`.
 
