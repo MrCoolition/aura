@@ -1,4 +1,5 @@
 import { demoCleaningRooms } from "../server/demo-data.js";
+import { requireAuth, upsertAuraUser } from "../server/auth.js";
 import { getSql, json, missingDatabasePayload, readJson } from "../server/db.js";
 
 export async function OPTIONS() {
@@ -37,6 +38,9 @@ function normalizedRooms(rooms) {
 }
 
 export async function POST(request) {
+  const auth = await requireAuth(request);
+  if (auth.response) return auth.response;
+
   const body = await readJson(request);
   const rooms = normalizedRooms(body.rooms);
 
@@ -68,13 +72,16 @@ export async function POST(request) {
         task_count: taskCount,
         proof_count: proofCount,
         estimated_minutes: estimatedMinutes,
+        auth_subject: auth.user.sub,
         rooms
       })
     );
   }
 
+  const auraUser = await upsertAuraUser(sql, auth.user);
   const planRows = await sql`
     insert into cleaning_plans (
+      client_user_id,
       level,
       priority,
       room_count,
@@ -85,6 +92,7 @@ export async function POST(request) {
       payload
     )
     values (
+      ${auraUser.id},
       ${level},
       ${priority},
       ${rooms.length},

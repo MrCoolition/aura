@@ -1,4 +1,5 @@
 import { demoMemoryNodes } from "../server/demo-data.js";
+import { requireAuth, upsertAuraUser } from "../server/auth.js";
 import { getSql, json, missingDatabasePayload, readJson } from "../server/db.js";
 
 export async function OPTIONS() {
@@ -23,6 +24,9 @@ export async function GET() {
 }
 
 export async function POST(request) {
+  const auth = await requireAuth(request);
+  if (auth.response) return auth.response;
+
   const body = await readJson(request);
   const label = String(body.label || "Preference").trim();
   const value = String(body.value || body.memory_value || "").trim();
@@ -34,12 +38,14 @@ export async function POST(request) {
   }
 
   if (!sql) {
-    return json(missingDatabasePayload("memory_node", { label, value, strength }));
+    return json(missingDatabasePayload("memory_node", { label, value, strength, auth_subject: auth.user.sub }));
   }
 
+  const auraUser = await upsertAuraUser(sql, auth.user);
+
   const rows = await sql`
-    insert into aura_memory_nodes (label, memory_value, strength, source)
-    values (${label}, ${value}, ${strength}, 'aura-web')
+    insert into aura_memory_nodes (client_user_id, label, memory_value, strength, source)
+    values (${auraUser.id}, ${label}, ${value}, ${strength}, 'aura-web')
     returning id, label, memory_value as value, strength, source, updated_at
   `;
 

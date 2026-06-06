@@ -31,9 +31,15 @@ create table if not exists aura_users (
   email text unique not null,
   phone text,
   avatar_url text,
+  auth_provider text,
+  auth_subject text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table aura_users add column if not exists auth_provider text;
+alter table aura_users add column if not exists auth_subject text;
+create unique index if not exists aura_users_auth_subject_idx on aura_users(auth_subject) where auth_subject is not null;
 
 create table if not exists client_profiles (
   id uuid primary key default gen_random_uuid(),
@@ -43,6 +49,16 @@ create table if not exists client_profiles (
   preference_memory jsonb not null default '{}'::jsonb,
   membership_tier text not null default 'plus',
   created_at timestamptz not null default now()
+);
+
+create table if not exists user_preferences (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references aura_users(id) on delete cascade,
+  namespace text not null default 'aura',
+  preferences jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (user_id, namespace)
 );
 
 create table if not exists assistant_profiles (

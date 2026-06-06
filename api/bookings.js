@@ -1,3 +1,4 @@
+import { requireAuth, upsertAuraUser } from "../server/auth.js";
 import { getSql, json, missingDatabasePayload, readJson } from "../server/db.js";
 
 export async function OPTIONS() {
@@ -5,6 +6,9 @@ export async function OPTIONS() {
 }
 
 export async function POST(request) {
+  const auth = await requireAuth(request);
+  if (auth.response) return auth.response;
+
   const body = await readJson(request);
   const taskSummary = String(body.taskSummary || "").trim();
   const serviceCategory = String(body.serviceCategory || "home").trim();
@@ -32,15 +36,19 @@ export async function POST(request) {
         market,
         budget_cents: budgetCents,
         platform_fee_cents: platformFeeCents,
-        assistant_payout_cents: assistantPayoutCents
+        assistant_payout_cents: assistantPayoutCents,
+        auth_subject: auth.user.sub
       })
     );
   }
+
+  const auraUser = await upsertAuraUser(sql, auth.user);
 
   const rows = await sql`
     insert into service_requests (
       client_name,
       client_email,
+      client_user_id,
       service_category,
       task_summary,
       market,
@@ -49,8 +57,9 @@ export async function POST(request) {
       ai_plan
     )
     values (
-      'AURA Web Client',
-      'demo@aura.local',
+      ${auraUser.full_name || "AURA Web Client"},
+      ${auraUser.email || "demo@aura.local"},
+      ${auraUser.id},
       ${serviceCategory},
       ${taskSummary},
       ${market},

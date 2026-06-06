@@ -33,6 +33,17 @@
           <button class="mode-button is-active" data-mode-button="hire" type="button">Hire</button>
           <button class="mode-button" data-mode-button="earn" type="button">Earn</button>
         </div>
+        <div class="auth-lockup" id="authLockup">
+          <div class="auth-user" id="authUser" hidden>
+            <img id="authAvatar" src="/assets/aura-app-icon.png" alt="">
+            <span>
+              <strong id="authName">AURA Guest</strong>
+              <small id="authEmail">Secure profile</small>
+            </span>
+          </div>
+          <button class="auth-action" id="loginButton" type="button">Sign in</button>
+          <button class="auth-action is-muted" id="logoutButton" type="button" hidden>Sign out</button>
+        </div>
       </header>
 
       <main id="home">
@@ -136,6 +147,10 @@
               <button class="ghost-action" id="optimizeDay" type="button">Optimize day</button>
             </div>
             <p class="status-line" id="bookingStatus">AURA is watching weather, traffic, ETA, and assistant fit.</p>
+            <div class="secure-profile-strip" id="secureProfileStrip">
+              <span id="authStatus">Demo profile</span>
+              <strong id="authGreeting">Sign in to make AURA yours.</strong>
+            </div>
           </section>
         </section>
 
@@ -384,6 +399,7 @@
       </footer>
     </div>
 
+    <script src="https://cdn.auth0.com/js/auth0-spa-js/2.20/auth0-spa-js.production.js"></script>
     <script src="/app.js" type="module"></script>
   </body>
 </html>

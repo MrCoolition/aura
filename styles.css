@@ -64,7 +64,7 @@ a {
   top: 0;
   z-index: 10;
   display: grid;
-  grid-template-columns: minmax(210px, 1fr) auto auto;
+  grid-template-columns: minmax(210px, 1fr) auto auto auto;
   gap: 20px;
   align-items: center;
   padding: 16px 32px;
@@ -116,7 +116,8 @@ a {
 .mode-switch,
 .chip-row,
 .hero-actions,
-.console-actions {
+.console-actions,
+.auth-lockup {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -149,6 +150,73 @@ a {
 .mode-button.is-active {
   color: #041018;
   background: var(--ink);
+}
+
+.auth-lockup {
+  justify-content: end;
+  min-width: 0;
+}
+
+.auth-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  max-width: 250px;
+  padding: 5px 8px 5px 5px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.auth-user img {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius);
+  object-fit: cover;
+}
+
+.auth-user span {
+  display: grid;
+  min-width: 0;
+}
+
+.auth-user strong,
+.auth-user small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.auth-user strong {
+  font-size: 0.82rem;
+}
+
+.auth-user small {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.auth-action {
+  min-height: 38px;
+  border: 1px solid rgba(22, 200, 255, 0.42);
+  border-radius: var(--radius);
+  color: #061018;
+  background: var(--green);
+  padding: 8px 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.auth-action.is-muted {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.auth-action:disabled {
+  cursor: not-allowed;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .hero-workbench {
@@ -461,6 +529,28 @@ select {
   color: var(--muted);
   font-size: 0.92rem;
   line-height: 1.5;
+}
+
+.secure-profile-strip {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid rgba(22, 200, 255, 0.2);
+  border-radius: var(--radius);
+  background: rgba(22, 200, 255, 0.055);
+}
+
+.secure-profile-strip span {
+  color: var(--cyan);
+  font-size: 0.75rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.secure-profile-strip strong {
+  text-align: right;
 }
 
 .metric-band {
@@ -1440,6 +1530,10 @@ output {
     display: none;
   }
 
+  .auth-lockup {
+    grid-column: 1 / -1;
+  }
+
   .hero-workbench,
   .split-section,
   .reactor-grid,
@@ -1546,9 +1640,14 @@ output {
 
   .console-header,
   .assistant-top,
+  .secure-profile-strip,
   .footer,
   .detection-item {
     flex-direction: column;
+  }
+
+  .secure-profile-strip strong {
+    text-align: left;
   }
 
   .timeline-item {

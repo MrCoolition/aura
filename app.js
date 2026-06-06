@@ -371,6 +371,26 @@ const routeStack = document.querySelector("#routeStack");
 const proofstream = document.querySelector("#proofstream");
 const routeLift = document.querySelector("#routeLift");
 const proofScore = document.querySelector("#proofScore");
+const loginButton = document.querySelector("#loginButton");
+const logoutButton = document.querySelector("#logoutButton");
+const authUser = document.querySelector("#authUser");
+const authAvatar = document.querySelector("#authAvatar");
+const authName = document.querySelector("#authName");
+const authEmail = document.querySelector("#authEmail");
+const authStatus = document.querySelector("#authStatus");
+const authGreeting = document.querySelector("#authGreeting");
+
+let auth0Client = null;
+let authConfig = null;
+let authState = {
+  ready: false,
+  enabled: false,
+  apiProtectionEnabled: false,
+  authenticated: false,
+  user: null,
+  token: ""
+};
+let preferenceSaveTimer = null;
 
 function currency(value) {
   return new Intl.NumberFormat("en-US", {
@@ -787,6 +807,8 @@ async function saveCleanprint() {
     return;
   }
 
+  if (!(await ensureSignedIn("Building Cleanprint"))) return;
+
   buildCleanprint.disabled = true;
   cleanprintStatus.textContent = "Building room map, proof stream, and assistant handoff...";
 
@@ -960,9 +982,10 @@ function inferInventory(file) {
 }
 
 async function postJson(url, payload) {
+  const headers = await requestHeaders(true);
   const response = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(payload)
   });
   if (!response.ok) {
@@ -971,8 +994,256 @@ async function postJson(url, payload) {
   return response.json();
 }
 
+async function getJson(url) {
+  const response = await fetch(url, { headers: await requestHeaders(false) });
+  if (!response.ok) {
+    throw new Error(`Request failed with ${response.status}`);
+  }
+  return response.json();
+}
+
+async function requestHeaders(includeJson) {
+  const headers = includeJson ? { "Content-Type": "application/json" } : {};
+  const token = await accessToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return headers;
+}
+
+async function accessToken() {
+  if (!authState.enabled || !authState.authenticated || !auth0Client || !authConfig?.audience) {
+    return "";
+  }
+
+  if (authState.token) return authState.token;
+
+  try {
+    authState.token = await auth0Client.getTokenSilently({
+      authorizationParams: {
+        audience: authConfig.audience,
+        scope: authConfig.scope
+      }
+    });
+    return authState.token;
+  } catch {
+    return "";
+  }
+}
+
+function authRedirectUri() {
+  return window.location.origin;
+}
+
+function renderAuthState() {
+  loginButton.hidden = authState.authenticated;
+  logoutButton.hidden = !authState.authenticated;
+  authUser.hidden = !authState.authenticated;
+
+  if (!authState.enabled) {
+    loginButton.disabled = true;
+    loginButton.textContent = "Auth0 off";
+    authStatus.textContent = "Demo profile";
+    authGreeting.textContent = "Add Auth0 env vars to unlock secure user profiles.";
+    return;
+  }
+
+  loginButton.disabled = false;
+  loginButton.textContent = "Sign in";
+
+  if (!authState.authenticated || !authState.user) {
+    authStatus.textContent = authState.apiProtectionEnabled ? "Secure ready" : "Audience needed";
+    authGreeting.textContent = authState.apiProtectionEnabled
+      ? "Sign in to make AURA yours."
+      : "Create an Auth0 API audience to protect Vercel writes.";
+    return;
+  }
+
+  const displayName = authState.user.name || authState.user.nickname || "AURA Client";
+  const email = authState.user.email || authState.user.sub || "Secure profile";
+  authName.textContent = displayName;
+  authEmail.textContent = email;
+  authAvatar.src = authState.user.picture || "/assets/aura-app-icon.png";
+  authStatus.textContent = "Private profile";
+  authGreeting.textContent = `${displayName.split(" ")[0] || "Your"} AURA defaults are syncing.`;
+}
+
+function preferenceSnapshot() {
+  return {
+    mode: shell.dataset.mode || "hire",
+    defaultService: selectedService(),
+    defaultBudget: budgetSelect.value,
+    defaultUrgency: timeSelect.value,
+    market: "Miami",
+    cleanprint: {
+      level: cleaningLevel.value,
+      priority: cleaningPriority.value,
+      rooms: selectedCleaningRooms()
+    }
+  };
+}
+
+async function saveProfilePreferences(reason = "interaction") {
+  if (!authState.enabled || !authState.authenticated) return;
+
+  try {
+    await postJson("/api/profile", {
+      reason,
+      preferences: preferenceSnapshot()
+    });
+  } catch {
+    authStatus.textContent = "Profile local";
+  }
+}
+
+function queuePreferenceSave(reason) {
+  if (!authState.enabled || !authState.authenticated) return;
+  clearTimeout(preferenceSaveTimer);
+  preferenceSaveTimer = setTimeout(() => {
+    saveProfilePreferences(reason);
+  }, 700);
+}
+
+function applyProfilePreferences(preferences) {
+  if (!preferences || typeof preferences !== "object") return;
+
+  if (preferences.mode) {
+    setMode(preferences.mode);
+  }
+
+  if (preferences.defaultBudget) {
+    budgetSelect.value = preferences.defaultBudget;
+  }
+
+  if (preferences.defaultUrgency) {
+    timeSelect.value = preferences.defaultUrgency;
+  }
+
+  if (preferences.defaultService) {
+    const chip = document.querySelector(`[data-service="${preferences.defaultService}"]`);
+    if (chip) {
+      serviceChips.forEach((item) => item.classList.remove("is-active"));
+      chip.classList.add("is-active");
+      taskInput.value = serviceTemplates[preferences.defaultService] || taskInput.value;
+    }
+  }
+
+  if (preferences.cleanprint) {
+    if (preferences.cleanprint.level) cleaningLevel.value = preferences.cleanprint.level;
+    if (preferences.cleanprint.priority) cleaningPriority.value = preferences.cleanprint.priority;
+    if (Array.isArray(preferences.cleanprint.rooms)) {
+      const selected = new Set(preferences.cleanprint.rooms);
+      roomChipGrid.querySelectorAll(".room-chip").forEach((chip) => {
+        chip.classList.toggle("is-selected", selected.has(chip.dataset.room));
+      });
+    }
+  }
+
+  renderRoomPlan();
+  updateQuote();
+}
+
+async function loadProfilePreferences() {
+  if (!authState.enabled || !authState.authenticated) return;
+
+  try {
+    const result = await getJson("/api/profile");
+    applyProfilePreferences(result.data?.preferences);
+  } catch {
+    authStatus.textContent = "Profile local";
+  }
+}
+
+async function login() {
+  if (!auth0Client || !authConfig?.enabled) return;
+  await auth0Client.loginWithRedirect({
+    authorizationParams: {
+      redirect_uri: authRedirectUri(),
+      audience: authConfig.audience || undefined,
+      scope: authConfig.scope
+    },
+    appState: {
+      returnTo: `${window.location.pathname}${window.location.hash || ""}`
+    }
+  });
+}
+
+async function logout() {
+  if (!auth0Client) return;
+  await auth0Client.logout({
+    logoutParams: {
+      returnTo: authRedirectUri()
+    }
+  });
+}
+
+async function ensureSignedIn(actionLabel) {
+  if (!authState.enabled) return true;
+  if (authState.authenticated) return true;
+  bookingStatus.textContent = `${actionLabel} needs a secure AURA profile first. Redirecting to Auth0...`;
+  await login();
+  return false;
+}
+
+async function initAuth() {
+  renderAuthState();
+
+  try {
+    const result = await fetch("/api/auth-config").then((response) => response.json());
+    authConfig = result.data || {};
+    authState.enabled = Boolean(authConfig.enabled);
+    authState.apiProtectionEnabled = Boolean(authConfig.apiProtectionEnabled);
+
+    if (!authState.enabled) {
+      authState.ready = true;
+      renderAuthState();
+      return;
+    }
+
+    if (!window.auth0?.createAuth0Client) {
+      authStatus.textContent = "Auth SDK blocked";
+      authGreeting.textContent = "Auth0 config is present, but the browser could not load the SPA SDK.";
+      return;
+    }
+
+    auth0Client = await window.auth0.createAuth0Client({
+      domain: authConfig.domain,
+      clientId: authConfig.clientId,
+      cacheLocation: authConfig.cacheLocation || "memory",
+      authorizationParams: {
+        redirect_uri: authRedirectUri(),
+        audience: authConfig.audience || undefined,
+        scope: authConfig.scope
+      }
+    });
+
+    if (window.location.search.includes("code=") && window.location.search.includes("state=")) {
+      const result = await auth0Client.handleRedirectCallback();
+      const returnTo = result.appState?.returnTo || window.location.pathname;
+      window.history.replaceState({}, document.title, returnTo);
+    }
+
+    authState.authenticated = await auth0Client.isAuthenticated();
+    if (authState.authenticated) {
+      authState.user = await auth0Client.getUser();
+      await accessToken();
+      renderAuthState();
+      await loadProfilePreferences();
+      queuePreferenceSave("auth-login");
+    }
+
+    authState.ready = true;
+    renderAuthState();
+  } catch {
+    authState.ready = true;
+    authStatus.textContent = "Auth pending";
+    authGreeting.textContent = "Auth0 setup is close. Check callback URLs and audience settings.";
+  }
+}
+
 modeButtons.forEach((button) => {
-  button.addEventListener("click", () => setMode(button.dataset.modeButton));
+  button.addEventListener("click", () => {
+    setMode(button.dataset.modeButton);
+    queuePreferenceSave("mode");
+  });
 });
 
 serviceChips.forEach((chip) => {
@@ -981,11 +1252,21 @@ serviceChips.forEach((chip) => {
     chip.classList.add("is-active");
     taskInput.value = serviceTemplates[chip.dataset.service];
     updateQuote();
+    queuePreferenceSave("service");
   });
 });
 
-budgetSelect.addEventListener("change", updateQuote);
-timeSelect.addEventListener("change", updateQuote);
+budgetSelect.addEventListener("change", () => {
+  updateQuote();
+  queuePreferenceSave("budget");
+});
+timeSelect.addEventListener("change", () => {
+  updateQuote();
+  queuePreferenceSave("urgency");
+});
+
+loginButton.addEventListener("click", login);
+logoutButton.addEventListener("click", logout);
 
 document.querySelector("#jumpToBooking").addEventListener("click", () => {
   document.querySelector("#marketplace").scrollIntoView({ behavior: "smooth" });
@@ -997,6 +1278,8 @@ document.querySelector("#jumpToProvider").addEventListener("click", () => {
 });
 
 document.querySelector("#bookRequest").addEventListener("click", async () => {
+  if (!(await ensureSignedIn("Matching"))) return;
+
   const service = selectedService();
   const assistant = topAssistant(service);
   const { total, fee, payout } = quoteState();
@@ -1075,10 +1358,17 @@ roomChipGrid.addEventListener("click", (event) => {
   if (!chip) return;
   chip.classList.toggle("is-selected");
   renderRoomPlan();
+  queuePreferenceSave("cleanprint-rooms");
 });
 
-cleaningLevel.addEventListener("change", renderRoomPlan);
-cleaningPriority.addEventListener("change", renderRoomPlan);
+cleaningLevel.addEventListener("change", () => {
+  renderRoomPlan();
+  queuePreferenceSave("cleanprint-level");
+});
+cleaningPriority.addEventListener("change", () => {
+  renderRoomPlan();
+  queuePreferenceSave("cleanprint-priority");
+});
 buildCleanprint.addEventListener("click", saveCleanprint);
 
 roomPlan.addEventListener("change", (event) => {
@@ -1100,6 +1390,14 @@ inventoryUpload.addEventListener("change", async () => {
   }
   const detected = inferInventory(file);
   renderDetections(detected);
+
+  if (!(await ensureSignedIn("Saving inventory"))) {
+    detectionList.insertAdjacentHTML(
+      "beforeend",
+      '<div class="detection-item"><strong>Secure profile</strong><span>Sign in</span><span>Inventory was scanned locally. Sign in to save it.</span></div>'
+    );
+    return;
+  }
 
   try {
     await postJson("/api/inventory", {
@@ -1125,6 +1423,8 @@ tipRange.addEventListener("input", () => {
 
 document.querySelector("#submitFeedback").addEventListener("click", async () => {
   const feedbackResult = document.querySelector("#feedbackResult");
+  if (!(await ensureSignedIn("Saving feedback"))) return;
+
   feedbackResult.textContent = "Feedback received. AURA updated assistant coaching and client preferences.";
   try {
     await postJson("/api/feedback", {
@@ -1154,3 +1454,4 @@ renderLifeprint();
 renderMissionControl();
 renderDetections();
 updateQuote();
+initAuth();

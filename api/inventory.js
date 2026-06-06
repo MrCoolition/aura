@@ -1,4 +1,5 @@
 import { demoInventoryDetections } from "../server/demo-data.js";
+import { requireAuth, upsertAuraUser } from "../server/auth.js";
 import { getSql, json, missingDatabasePayload, readJson } from "../server/db.js";
 
 export async function OPTIONS() {
@@ -6,6 +7,9 @@ export async function OPTIONS() {
 }
 
 export async function POST(request) {
+  const auth = await requireAuth(request);
+  if (auth.response) return auth.response;
+
   const body = await readJson(request);
   const fileName = String(body.fileName || "inventory-upload.jpg").trim();
   const detectedItems = Array.isArray(body.detectedItems) && body.detectedItems.length
@@ -14,17 +18,27 @@ export async function POST(request) {
   const sql = await getSql();
 
   if (!sql) {
-    return json(missingDatabasePayload("inventory_scan", { file_name: fileName, detections: detectedItems }));
+    return json(
+      missingDatabasePayload("inventory_scan", {
+        file_name: fileName,
+        detections: detectedItems,
+        auth_subject: auth.user.sub
+      })
+    );
   }
+
+  const auraUser = await upsertAuraUser(sql, auth.user);
 
   const scanRows = await sql`
     insert into inventory_image_scans (
+      client_user_id,
       source_file_name,
       provider,
       status,
       raw_result
     )
     values (
+      ${auraUser.id},
       ${fileName},
       'aura-browser-demo',
       'processed',

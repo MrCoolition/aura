@@ -49,6 +49,7 @@ Core tables:
 
 - `aura_users`
 - `client_profiles`
+- `user_preferences`
 - `assistant_profiles`
 - `service_requests`
 - `bookings`
@@ -73,8 +74,19 @@ Set these environment variables in Vercel:
 - `DATABASE_URL`
 - `AURA_PLATFORM_FEE_BPS`
 - `AURA_DEFAULT_MARKET`
+- `AUTH0_DOMAIN`
+- `AUTH0_CLIENT_ID`
+- `AUTH0_AUDIENCE`
+- `AUTH0_SCOPE`
+- `AUTH0_CACHE_LOCATION`
 
 The app is intentionally zero-build for fast deployment. `index.html`, `styles.css`, and `app.js` ship the client app. Files in `api/` are Vercel Functions and use Neon only when `DATABASE_URL` exists.
+
+## Auth0 Security
+
+AURA uses Auth0 SPA login with Authorization Code + PKCE in the browser. API writes call Vercel Functions with a bearer token. The functions validate Auth0 JWTs against the tenant JWKS when `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, and `AUTH0_AUDIENCE` are configured.
+
+Signed-in users are upserted into `aura_users` by `auth_subject`, and their customization defaults are stored in `user_preferences`.
 
 ## Profit Loops
 

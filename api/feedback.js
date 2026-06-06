@@ -1,3 +1,4 @@
+import { requireAuth, upsertAuraUser } from "../server/auth.js";
 import { getSql, json, missingDatabasePayload, readJson } from "../server/db.js";
 
 export async function OPTIONS() {
@@ -5,6 +6,9 @@ export async function OPTIONS() {
 }
 
 export async function POST(request) {
+  const auth = await requireAuth(request);
+  if (auth.response) return auth.response;
+
   const body = await readJson(request);
   const rating = Number(body.rating || 5);
   const tipCents = Number(body.tipCents || 0);
@@ -17,11 +21,14 @@ export async function POST(request) {
   const sql = await getSql();
 
   if (!sql) {
-    return json(missingDatabasePayload("feedback", { rating, tip_cents: tipCents, note }));
+    return json(missingDatabasePayload("feedback", { rating, tip_cents: tipCents, note, auth_subject: auth.user.sub }));
   }
+
+  const auraUser = await upsertAuraUser(sql, auth.user);
 
   const rows = await sql`
     insert into feedback_events (
+      client_user_id,
       rating,
       tip_cents,
       client_note,
@@ -29,6 +36,7 @@ export async function POST(request) {
       coaching_notes
     )
     values (
+      ${auraUser.id},
       ${rating},
       ${tipCents},
       ${note},

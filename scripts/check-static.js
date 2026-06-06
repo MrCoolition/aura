@@ -10,12 +10,15 @@ const requiredFiles = [
   "vercel.json",
   "package.json",
   "api/assistants.js",
+  "api/auth-config.js",
   "api/bookings.js",
   "api/cleaning-plan.js",
   "api/feedback.js",
   "api/inventory.js",
   "api/memory.js",
   "api/missions.js",
+  "api/profile.js",
+  "server/auth.js",
   "server/db.js",
   "server/demo-data.js",
   "database/schema.sql",
@@ -30,7 +33,7 @@ if (missing.length) {
   process.exit(1);
 }
 
-for (const file of ["app.js", "api/assistants.js", "api/bookings.js", "api/cleaning-plan.js", "api/feedback.js", "api/inventory.js", "api/memory.js", "api/missions.js", "server/db.js", "server/demo-data.js", "scripts/static-server.js"]) {
+for (const file of ["app.js", "api/assistants.js", "api/auth-config.js", "api/bookings.js", "api/cleaning-plan.js", "api/feedback.js", "api/inventory.js", "api/memory.js", "api/missions.js", "api/profile.js", "server/auth.js", "server/db.js", "server/demo-data.js", "scripts/static-server.js"]) {
   execFileSync(process.execPath, ["--check", join(root, file)], { stdio: "inherit" });
 }
 

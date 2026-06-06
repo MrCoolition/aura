@@ -19,12 +19,14 @@ const mimeTypes = {
 
 const apiRoutes = {
   "/api/assistants": "api/assistants.js",
+  "/api/auth-config": "api/auth-config.js",
   "/api/bookings": "api/bookings.js",
   "/api/cleaning-plan": "api/cleaning-plan.js",
   "/api/feedback": "api/feedback.js",
   "/api/inventory": "api/inventory.js",
   "/api/memory": "api/memory.js",
-  "/api/missions": "api/missions.js"
+  "/api/missions": "api/missions.js",
+  "/api/profile": "api/profile.js"
 };
 
 function resolvePath(url) {
