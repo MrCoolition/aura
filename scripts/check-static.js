@@ -16,7 +16,9 @@ const requiredFiles = [
   "server/db.js",
   "server/demo-data.js",
   "database/schema.sql",
-  "database/seed.sql"
+  "database/seed.sql",
+  "assets/aura-app-icon.png",
+  "assets/aura-logo-transparent.png"
 ];
 
 const missing = requiredFiles.filter((file) => !existsSync(join(root, file)));
@@ -33,7 +35,7 @@ JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
 JSON.parse(readFileSync(join(root, "vercel.json"), "utf8"));
 
 const html = readFileSync(join(root, "index.html"), "utf8");
-for (const asset of ["/styles.css", "/app.js"]) {
+for (const asset of ["/styles.css", "/app.js", "/assets/aura-app-icon.png", "/assets/aura-logo-transparent.png"]) {
   if (!html.includes(asset)) {
     console.error(`index.html does not reference ${asset}`);
     process.exit(1);
