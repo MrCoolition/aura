@@ -21,7 +21,7 @@ function authSettings() {
 
   return {
     enabled: Boolean(domain && clientId),
-    apiProtectionEnabled: Boolean(domain && clientId && audience),
+    apiProtectionEnabled: Boolean(domain && clientId),
     issuerBaseUrl,
     domain,
     clientId,
@@ -146,7 +146,8 @@ function validateClaims(payload, settings) {
     throw new Error("Invalid issuer");
   }
 
-  if (!audience.includes(settings.audience)) {
+  const validAudiences = [settings.clientId, settings.audience].filter(Boolean);
+  if (!audience.some((item) => validAudiences.includes(item))) {
     throw new Error("Invalid audience");
   }
 

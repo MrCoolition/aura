@@ -402,6 +402,7 @@ const adminFeedbackCount = document.querySelector("#adminFeedbackCount");
 let auth0Client = null;
 let authConfig = null;
 const fallbackAuthStorageKey = "aura.auth.pkce";
+const defaultAuthContext = "Save your preferences, bookings, home routines, inventory, and assistant history.";
 let authState = {
   ready: false,
   enabled: false,
@@ -409,10 +410,11 @@ let authState = {
   authenticated: false,
   user: null,
   role: "client",
+  idToken: "",
   token: ""
 };
 let preferenceSaveTimer = null;
-let pendingAuthContext = "Secure profile, saved preferences, bookings, Cleanprints, inventory, and admin control.";
+let pendingAuthContext = defaultAuthContext;
 
 function currency(value) {
   return new Intl.NumberFormat("en-US", {
@@ -836,11 +838,11 @@ async function saveCleanprint() {
 
   try {
     const result = await postJson("/api/cleaning-plan", payload);
-    const modeCopy = result.mode === "database" ? "saved to Neon" : "built in demo mode";
+    const modeCopy = result.mode === "database" ? "saved" : "built";
     cleanprintStatus.textContent = `Cleanprint ${modeCopy}: ${payload.roomCount} rooms, ${payload.taskCount} tasks, ${payload.proofCount} proof points.`;
     bookingStatus.textContent = `Cleanprint ready: ${payload.taskCount} room tasks and ${payload.estimatedMinutes} minutes packaged for dispatch.`;
   } catch {
-    cleanprintStatus.textContent = "Cleanprint built locally. Add DATABASE_URL to persist room plans.";
+    cleanprintStatus.textContent = "Cleanprint built locally. Sign in to save and manage room plans.";
   } finally {
     buildCleanprint.disabled = false;
   }
@@ -1033,19 +1035,16 @@ async function requestHeaders(includeJson) {
 
 async function accessToken() {
   if (authState.token) return authState.token;
+  if (authState.idToken) return authState.idToken;
 
-  if (!authState.enabled || !authState.authenticated || !auth0Client || !authConfig?.audience) {
+  if (!authState.enabled || !authState.authenticated || !auth0Client) {
     return "";
   }
 
   try {
-    authState.token = await auth0Client.getTokenSilently({
-      authorizationParams: {
-        audience: authConfig.audience,
-        scope: authConfig.scope
-      }
-    });
-    return authState.token;
+    const claims = await auth0Client.getIdTokenClaims();
+    authState.idToken = claims?.__raw || "";
+    return authState.idToken;
   } catch {
     return "";
   }
@@ -1087,9 +1086,25 @@ function decodeJwtPayload(token) {
   return JSON.parse(atob(padded));
 }
 
+function cleanAuthQuery(returnTo = window.location.pathname) {
+  window.history.replaceState({}, document.title, returnTo || "/");
+}
+
+function handleAuthErrorFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  if (!params.has("error")) return false;
+
+  sessionStorage.removeItem(fallbackAuthStorageKey);
+  cleanAuthQuery(window.location.pathname);
+  authStatus.textContent = "Sign-in paused";
+  authGreeting.textContent = "We could not finish sign-in. Please try again.";
+  if (authPortalStatus) authPortalStatus.textContent = "We could not finish sign-in. Please try again.";
+  return true;
+}
+
 async function startFallbackAuthRedirect() {
   if (!authConfig?.enabled || !authConfig?.domain || !authConfig?.clientId) {
-    authPortalStatus.textContent = "Auth0 config is missing. Check Vercel environment variables.";
+    authPortalStatus.textContent = "Sign-in is not ready yet. Please try again shortly.";
     authPortalContinue.disabled = false;
     return;
   }
@@ -1120,7 +1135,6 @@ async function startFallbackAuthRedirect() {
   authorizeUrl.searchParams.set("nonce", nonce);
   authorizeUrl.searchParams.set("code_challenge", codeChallenge);
   authorizeUrl.searchParams.set("code_challenge_method", "S256");
-  if (authConfig.audience) authorizeUrl.searchParams.set("audience", authConfig.audience);
 
   window.location.assign(authorizeUrl.toString());
 }
@@ -1159,7 +1173,8 @@ async function handleFallbackAuthCallback() {
   if (!user) throw new Error("Auth0 did not return an ID token");
 
   sessionStorage.removeItem(fallbackAuthStorageKey);
-  authState.token = tokens.access_token || "";
+  authState.idToken = tokens.id_token || "";
+  authState.token = "";
   authState.authenticated = true;
   authState.user = user;
   window.history.replaceState({}, document.title, transaction.returnTo || window.location.pathname);
@@ -1172,26 +1187,26 @@ function renderAuthPortalState() {
   authPortalContinue.disabled = !authState.enabled;
 
   if (!authState.enabled) {
-    authPortalStatus.textContent = "Auth0 is not connected in this environment yet.";
-    authPortalContinue.textContent = "Auth0 not connected";
+    authPortalStatus.textContent = "Sign-in is not connected yet.";
+    authPortalContinue.textContent = "Try again soon";
     return;
   }
 
-  authPortalContinue.textContent = "Continue securely";
+  authPortalContinue.textContent = "Continue";
 
   if (!authState.apiProtectionEnabled) {
-    authPortalStatus.textContent = "Login is connected. Add AUTH0_AUDIENCE to protect API writes.";
+    authPortalStatus.textContent = "Secure sign-in is ready.";
     return;
   }
 
-  authPortalStatus.textContent = "Auth0 connected. Neon RLS context activates after sign-in.";
+  authPortalStatus.textContent = "Secure sign-in is ready.";
 }
 
 function openAuthPortal(actionLabel = "") {
   if (!authPortal) return;
   pendingAuthContext = actionLabel
     ? `${actionLabel} needs your private AURA profile.`
-    : "Secure profile, saved preferences, bookings, Cleanprints, inventory, and admin control.";
+    : defaultAuthContext;
   if (authPortalContext) authPortalContext.textContent = pendingAuthContext;
   renderAuthPortalState();
   authPortal.hidden = false;
@@ -1206,15 +1221,16 @@ function closeAuthPortal() {
 }
 
 function renderAuthState() {
-  loginButton.hidden = authState.authenticated;
-  logoutButton.hidden = !authState.authenticated;
-  authUser.hidden = !authState.authenticated;
+  const signedIn = Boolean(authState.authenticated && authState.user);
+  loginButton.hidden = signedIn;
+  logoutButton.hidden = !signedIn;
+  authUser.hidden = !signedIn;
 
   if (!authState.enabled) {
     loginButton.disabled = false;
     loginButton.textContent = "Sign in";
-    authStatus.textContent = "Demo profile";
-    authGreeting.textContent = "Add Auth0 env vars to unlock secure user profiles.";
+    authStatus.textContent = "Guest mode";
+    authGreeting.textContent = "Sign in to save preferences and bookings.";
     renderAuthPortalState();
     return;
   }
@@ -1223,13 +1239,11 @@ function renderAuthState() {
   loginButton.textContent = "Sign in";
   renderAuthPortalState();
 
-  if (!authState.authenticated || !authState.user) {
+  if (!signedIn) {
     authState.role = "client";
     renderAdminAccess(false);
-    authStatus.textContent = authState.apiProtectionEnabled ? "Secure ready" : "Audience needed";
-    authGreeting.textContent = authState.apiProtectionEnabled
-      ? "Sign in to make AURA yours."
-      : "Create an Auth0 API audience to protect Vercel writes.";
+    authStatus.textContent = "Guest mode";
+    authGreeting.textContent = "Sign in to save preferences and bookings.";
     return;
   }
 
@@ -1238,8 +1252,8 @@ function renderAuthState() {
   authName.textContent = displayName;
   authEmail.textContent = email;
   authAvatar.src = authState.user.picture || "/assets/aura-app-icon.png";
-  authStatus.textContent = authState.role === "admin" ? "Admin profile" : "Private profile";
-  authGreeting.textContent = `${displayName.split(" ")[0] || "Your"} AURA defaults are syncing.`;
+  authStatus.textContent = authState.role === "admin" ? "Admin profile" : "Signed in";
+  authGreeting.textContent = `${displayName.split(" ")[0] || "Your"} AURA profile is active.`;
   renderAdminAccess(authState.role === "admin");
   closeAuthPortal();
 }
@@ -1367,14 +1381,14 @@ function escapeHtml(value) {
 function renderAdminOverview(data) {
   const totals = data.totals || {};
   const security = data.security || {};
-  adminMode.textContent = data.user?.role === "admin" ? "Admin live" : "RLS live";
+  adminMode.textContent = data.user?.role === "admin" ? "Admin live" : "Secure live";
   adminStats.innerHTML = [
     ["Users", totals.users || 0],
     ["Requests", totals.service_requests || 0],
     ["Cleanprints", totals.cleanprints || 0],
     ["Inventory scans", totals.inventory_scans || 0],
     ["Feedback", totals.feedback_events || 0],
-    ["RLS forced", `${security.rls_forced || 0}/${security.protected_tables || 0}`]
+    ["Secure tables", `${security.rls_forced || 0}/${security.protected_tables || 0}`]
   ]
     .map(([label, value]) => `<div class="admin-stat"><strong>${value}</strong><span>${label}</span></div>`)
     .join("");
@@ -1447,7 +1461,7 @@ async function loadAdminOverview() {
     renderAdminOverview(result.data);
   } catch {
     adminMode.textContent = "Admin blocked";
-    adminStats.innerHTML = '<p class="admin-empty">Admin access requires an Auth0 admin role or AURA_ADMIN_EMAILS.</p>';
+    adminStats.innerHTML = '<p class="admin-empty">Admin access is limited to approved AURA operators.</p>';
   }
 }
 
@@ -1458,7 +1472,7 @@ async function continueAuth0Login() {
   }
 
   authPortalContinue.disabled = true;
-  authPortalStatus.textContent = "Opening Auth0...";
+  authPortalStatus.textContent = "Opening secure sign-in...";
 
   if (!auth0Client) {
     await startFallbackAuthRedirect();
@@ -1478,7 +1492,7 @@ async function continueAuth0Login() {
     if (!redirectStarted && !document.hidden) {
       startFallbackAuthRedirect().catch(() => {
         authPortalContinue.disabled = false;
-        authPortalStatus.textContent = "Could not open Auth0. Check allowed callback and web origin URLs.";
+        authPortalStatus.textContent = "Could not open sign-in. Please try again.";
       });
     }
   }, 900);
@@ -1487,7 +1501,6 @@ async function continueAuth0Login() {
     await auth0Client.loginWithRedirect({
       authorizationParams: {
         redirect_uri: authRedirectUri(),
-        audience: authConfig.audience || undefined,
         scope: authConfig.scope
       },
       appState: {
@@ -1505,6 +1518,8 @@ function login() {
 
 async function logout() {
   sessionStorage.removeItem(fallbackAuthStorageKey);
+  authState.idToken = "";
+  authState.token = "";
 
   if (!auth0Client && authConfig?.enabled) {
     const logoutUrl = new URL("/v2/logout", authOrigin());
@@ -1539,6 +1554,12 @@ async function initAuth() {
     authState.enabled = Boolean(authConfig.enabled);
     authState.apiProtectionEnabled = Boolean(authConfig.apiProtectionEnabled);
 
+    if (handleAuthErrorFromUrl()) {
+      authState.ready = true;
+      renderAuthState();
+      return;
+    }
+
     if (await handleFallbackAuthCallback()) {
       authState.ready = true;
       renderAuthState();
@@ -1554,8 +1575,8 @@ async function initAuth() {
     }
 
     if (!window.auth0?.createAuth0Client) {
-      authStatus.textContent = "Auth SDK blocked";
-      authGreeting.textContent = "Auth0 config is present, but the browser could not load the SPA SDK.";
+      authStatus.textContent = "Guest mode";
+      authGreeting.textContent = "Sign in to save preferences and bookings.";
       return;
     }
 
@@ -1565,7 +1586,6 @@ async function initAuth() {
       cacheLocation: authConfig.cacheLocation || "memory",
       authorizationParams: {
         redirect_uri: authRedirectUri(),
-        audience: authConfig.audience || undefined,
         scope: authConfig.scope
       }
     });
@@ -1589,8 +1609,8 @@ async function initAuth() {
     renderAuthState();
   } catch {
     authState.ready = true;
-    authStatus.textContent = "Auth pending";
-    authGreeting.textContent = "Auth0 setup is close. Check callback URLs and audience settings.";
+    authStatus.textContent = "Guest mode";
+    authGreeting.textContent = "Sign in to save preferences and bookings.";
   }
 }
 
@@ -1662,7 +1682,7 @@ document.querySelector("#bookRequest").addEventListener("click", async () => {
     });
     bookingStatus.textContent = `${result.message} ${assistant.name} remains the top trust-lattice match.`;
   } catch {
-    bookingStatus.textContent = `Demo booking created with ${assistant.name}. Add DATABASE_URL on Vercel to persist it in Neon.`;
+    bookingStatus.textContent = `Request drafted with ${assistant.name}. Sign in to save and manage it.`;
   }
 });
 
@@ -1771,7 +1791,7 @@ inventoryUpload.addEventListener("change", async () => {
   } catch {
     detectionList.insertAdjacentHTML(
       "beforeend",
-      '<div class="detection-item"><strong>Demo mode</strong><span>Not saved</span><span>Add DATABASE_URL to persist inventory scans.</span></div>'
+      '<div class="detection-item"><strong>Saved locally</strong><span>Pending</span><span>Sign in to keep inventory scans in your AURA profile.</span></div>'
     );
   }
 });
@@ -1796,7 +1816,7 @@ document.querySelector("#submitFeedback").addEventListener("click", async () => 
       note: "Submitted from AURA web console"
     });
   } catch {
-    feedbackResult.textContent = "Feedback captured in demo mode. Add DATABASE_URL to persist quality signals.";
+    feedbackResult.textContent = "Feedback captured locally. Sign in to keep it with your AURA profile.";
   }
 });
 

@@ -68,7 +68,7 @@ Allowed Web Origins:
 http://localhost:4173, https://aura-omega-rosy.vercel.app
 ```
 
-Create an Auth0 API and use its Identifier as `AUTH0_AUDIENCE`. Without an audience, the UI can sign in but API writes stay in demo mode instead of JWT-protected mode.
+`AUTH0_AUDIENCE` is optional. Leave it blank unless you created an Auth0 API. If you do create one, the value must exactly match that API's **Identifier** in Auth0. Do not use the Vercel app URL as the audience unless an Auth0 API exists with that exact identifier.
 
 ## Admin + RLS
 

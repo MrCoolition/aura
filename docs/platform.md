@@ -76,7 +76,7 @@ Set these environment variables in Vercel:
 - `AURA_DEFAULT_MARKET`
 - `AUTH0_DOMAIN`
 - `AUTH0_CLIENT_ID`
-- `AUTH0_AUDIENCE`
+- `AUTH0_AUDIENCE` (optional; must match an Auth0 API Identifier if used)
 - `AUTH0_SCOPE`
 - `AUTH0_CACHE_LOCATION`
 - `AURA_ADMIN_EMAILS`
@@ -86,7 +86,7 @@ The app is intentionally zero-build for fast deployment. `index.html`, `styles.c
 
 ## Auth0 Security
 
-AURA uses Auth0 SPA login with Authorization Code + PKCE in the browser. API writes call Vercel Functions with a bearer token. The functions validate Auth0 JWTs against the tenant JWKS when `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, and `AUTH0_AUDIENCE` are configured.
+AURA uses Auth0 SPA login with Authorization Code + PKCE in the browser. API writes call Vercel Functions with a bearer token. The functions validate Auth0 JWTs against the tenant JWKS when `AUTH0_DOMAIN` and `AUTH0_CLIENT_ID` are configured. `AUTH0_AUDIENCE` is optional and should only be set to an Auth0 API Identifier that exists in the tenant.
 
 Signed-in users are upserted into `aura_users` by `auth_subject`, and their customization defaults are stored in `user_preferences`.
 
