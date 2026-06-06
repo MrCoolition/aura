@@ -63,6 +63,34 @@ a {
     #05070b;
 }
 
+.app-shell.is-auth-booting main,
+.app-shell.is-auth-booting .footer,
+.app-shell.is-auth-booting .topnav,
+.app-shell.is-auth-booting .mode-switch,
+.app-shell.is-auth-booting .auth-lockup,
+.app-shell.is-auth-gated main,
+.app-shell.is-auth-gated .footer,
+.app-shell.is-auth-gated .topnav,
+.app-shell.is-auth-gated .mode-switch,
+.app-shell.is-auth-gated .auth-lockup {
+  display: none !important;
+}
+
+.app-shell.is-auth-booting .topbar,
+.app-shell.is-auth-gated .topbar {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: start;
+}
+
+.app-shell.is-auth-booting .brand-lockup,
+.app-shell.is-auth-gated .brand-lockup {
+  pointer-events: none;
+}
+
+.app-shell.is-auth-gated .auth-portal-close {
+  display: none !important;
+}
+
 .topbar {
   position: sticky;
   top: 0;
@@ -228,7 +256,7 @@ body.auth-portal-open {
 }
 
 .auth-portal[hidden] {
-  display: none;
+  display: none !important;
 }
 
 .auth-portal {

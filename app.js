@@ -399,9 +399,7 @@ const adminCleanprintCount = document.querySelector("#adminCleanprintCount");
 const adminInventoryCount = document.querySelector("#adminInventoryCount");
 const adminFeedbackCount = document.querySelector("#adminFeedbackCount");
 
-let auth0Client = null;
 let authConfig = null;
-const fallbackAuthStorageKey = "aura.auth.pkce";
 const defaultAuthContext = "Save your preferences, bookings, home routines, inventory, and assistant history.";
 let authState = {
   ready: false,
@@ -410,8 +408,7 @@ let authState = {
   authenticated: false,
   user: null,
   role: "client",
-  idToken: "",
-  token: ""
+  authMessage: ""
 };
 let preferenceSaveTimer = null;
 let pendingAuthContext = defaultAuthContext;
@@ -1027,63 +1024,7 @@ async function getJson(url) {
 }
 
 async function requestHeaders(includeJson) {
-  const headers = includeJson ? { "Content-Type": "application/json" } : {};
-  const token = await accessToken();
-  if (token) headers.Authorization = `Bearer ${token}`;
-  return headers;
-}
-
-async function accessToken() {
-  if (authState.token) return authState.token;
-  if (authState.idToken) return authState.idToken;
-
-  if (!authState.enabled || !authState.authenticated || !auth0Client) {
-    return "";
-  }
-
-  try {
-    const claims = await auth0Client.getIdTokenClaims();
-    authState.idToken = claims?.__raw || "";
-    return authState.idToken;
-  } catch {
-    return "";
-  }
-}
-
-function authRedirectUri() {
-  return window.location.origin;
-}
-
-function authOrigin() {
-  const domain = authConfig?.domain || "";
-  return domain.startsWith("http") ? domain.replace(/\/$/, "") : `https://${domain}`;
-}
-
-function base64Url(bytes) {
-  return btoa(String.fromCharCode(...bytes))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/g, "");
-}
-
-function randomToken(byteLength = 32) {
-  const bytes = new Uint8Array(byteLength);
-  window.crypto.getRandomValues(bytes);
-  return base64Url(bytes);
-}
-
-async function codeChallengeFor(verifier) {
-  const bytes = new TextEncoder().encode(verifier);
-  const digest = await window.crypto.subtle.digest("SHA-256", bytes);
-  return base64Url(new Uint8Array(digest));
-}
-
-function decodeJwtPayload(token) {
-  const payload = token?.split(".")?.[1];
-  if (!payload) return null;
-  const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
-  const padded = `${normalized}${"=".repeat((4 - (normalized.length % 4)) % 4)}`;
-  return JSON.parse(atob(padded));
+  return includeJson ? { "Content-Type": "application/json" } : {};
 }
 
 function cleanAuthQuery(returnTo = window.location.pathname) {
@@ -1094,97 +1035,28 @@ function handleAuthErrorFromUrl() {
   const params = new URLSearchParams(window.location.search);
   if (!params.has("error")) return false;
 
-  sessionStorage.removeItem(fallbackAuthStorageKey);
   cleanAuthQuery(window.location.pathname);
+  authState.authMessage = "We could not finish sign-in. Please try again.";
   authStatus.textContent = "Sign-in paused";
   authGreeting.textContent = "We could not finish sign-in. Please try again.";
   if (authPortalStatus) authPortalStatus.textContent = "We could not finish sign-in. Please try again.";
   return true;
 }
 
-async function startFallbackAuthRedirect() {
-  if (!authConfig?.enabled || !authConfig?.domain || !authConfig?.clientId) {
-    authPortalStatus.textContent = "Sign-in is not ready yet. Please try again shortly.";
-    authPortalContinue.disabled = false;
-    return;
-  }
-
-  const state = randomToken(32);
-  const nonce = randomToken(32);
-  const codeVerifier = randomToken(64);
-  const codeChallenge = await codeChallengeFor(codeVerifier);
-  const returnTo = `${window.location.pathname}${window.location.hash || ""}`;
-
-  sessionStorage.setItem(
-    fallbackAuthStorageKey,
-    JSON.stringify({
-      state,
-      nonce,
-      codeVerifier,
-      returnTo,
-      createdAt: Date.now()
-    })
-  );
-
-  const authorizeUrl = new URL("/authorize", authOrigin());
-  authorizeUrl.searchParams.set("client_id", authConfig.clientId);
-  authorizeUrl.searchParams.set("redirect_uri", authRedirectUri());
-  authorizeUrl.searchParams.set("response_type", "code");
-  authorizeUrl.searchParams.set("scope", authConfig.scope || "openid profile email");
-  authorizeUrl.searchParams.set("state", state);
-  authorizeUrl.searchParams.set("nonce", nonce);
-  authorizeUrl.searchParams.set("code_challenge", codeChallenge);
-  authorizeUrl.searchParams.set("code_challenge_method", "S256");
-
-  window.location.assign(authorizeUrl.toString());
-}
-
-async function handleFallbackAuthCallback() {
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get("code");
-  const state = params.get("state");
-  if (!code || !state) return false;
-
-  const rawTransaction = sessionStorage.getItem(fallbackAuthStorageKey);
-  if (!rawTransaction) return false;
-
-  const transaction = JSON.parse(rawTransaction);
-  if (transaction.state !== state) return false;
-
-  const response = await fetch(new URL("/oauth/token", authOrigin()).toString(), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      grant_type: "authorization_code",
-      client_id: authConfig.clientId,
-      code,
-      code_verifier: transaction.codeVerifier,
-      redirect_uri: authRedirectUri()
-    })
-  });
-
-  if (!response.ok) {
-    sessionStorage.removeItem(fallbackAuthStorageKey);
-    throw new Error("Auth0 token exchange failed");
-  }
-
-  const tokens = await response.json();
-  const user = decodeJwtPayload(tokens.id_token);
-  if (!user) throw new Error("Auth0 did not return an ID token");
-
-  sessionStorage.removeItem(fallbackAuthStorageKey);
-  authState.idToken = tokens.id_token || "";
-  authState.token = "";
-  authState.authenticated = true;
-  authState.user = user;
-  window.history.replaceState({}, document.title, transaction.returnTo || window.location.pathname);
-  return true;
+function authGateActive() {
+  return authState.enabled && !(authState.authenticated && authState.user);
 }
 
 function renderAuthPortalState() {
   if (!authPortalStatus || !authPortalContinue) return;
 
   authPortalContinue.disabled = !authState.enabled;
+
+  if (authState.authMessage) {
+    authPortalContinue.textContent = authState.enabled ? "Try again" : "Try again soon";
+    authPortalStatus.textContent = authState.authMessage;
+    return;
+  }
 
   if (!authState.enabled) {
     authPortalStatus.textContent = "Sign-in is not connected yet.";
@@ -1215,13 +1087,39 @@ function openAuthPortal(actionLabel = "") {
 }
 
 function closeAuthPortal() {
+  if (authGateActive()) return;
   if (!authPortal) return;
   authPortal.hidden = true;
   document.body.classList.remove("auth-portal-open");
 }
 
+function renderAuthGate(signedIn) {
+  const booting = !authState.ready && authConfig === null;
+  const gated = !booting && authState.enabled && !signedIn;
+  shell.classList.toggle("is-auth-booting", booting);
+  shell.classList.toggle("is-auth-gated", gated);
+  authPortalClose.hidden = booting || gated;
+
+  if (booting) {
+    return;
+  }
+
+  if (gated) {
+    pendingAuthContext = defaultAuthContext;
+    if (authPortalContext) authPortalContext.textContent = defaultAuthContext;
+    renderAuthPortalState();
+    authPortal.hidden = false;
+    document.body.classList.add("auth-portal-open");
+    return;
+  }
+
+  if (signedIn) closeAuthPortal();
+}
+
 function renderAuthState() {
   const signedIn = Boolean(authState.authenticated && authState.user);
+  renderAuthGate(signedIn);
+
   loginButton.hidden = signedIn;
   logoutButton.hidden = !signedIn;
   authUser.hidden = !signedIn;
@@ -1472,44 +1370,10 @@ async function continueAuth0Login() {
   }
 
   authPortalContinue.disabled = true;
+  authState.authMessage = "";
   authPortalStatus.textContent = "Opening secure sign-in...";
-
-  if (!auth0Client) {
-    await startFallbackAuthRedirect();
-    return;
-  }
-
-  let redirectStarted = false;
-  window.addEventListener(
-    "pagehide",
-    () => {
-      redirectStarted = true;
-    },
-    { once: true }
-  );
-
-  window.setTimeout(() => {
-    if (!redirectStarted && !document.hidden) {
-      startFallbackAuthRedirect().catch(() => {
-        authPortalContinue.disabled = false;
-        authPortalStatus.textContent = "Could not open sign-in. Please try again.";
-      });
-    }
-  }, 900);
-
-  try {
-    await auth0Client.loginWithRedirect({
-      authorizationParams: {
-        redirect_uri: authRedirectUri(),
-        scope: authConfig.scope
-      },
-      appState: {
-        returnTo: `${window.location.pathname}${window.location.hash || ""}`
-      }
-    });
-  } catch {
-    await startFallbackAuthRedirect();
-  }
+  const returnTo = `${window.location.pathname}${window.location.hash || ""}`;
+  window.location.assign(`/api/auth/login?returnTo=${encodeURIComponent(returnTo)}`);
 }
 
 function login() {
@@ -1517,24 +1381,7 @@ function login() {
 }
 
 async function logout() {
-  sessionStorage.removeItem(fallbackAuthStorageKey);
-  authState.idToken = "";
-  authState.token = "";
-
-  if (!auth0Client && authConfig?.enabled) {
-    const logoutUrl = new URL("/v2/logout", authOrigin());
-    logoutUrl.searchParams.set("client_id", authConfig.clientId);
-    logoutUrl.searchParams.set("returnTo", authRedirectUri());
-    window.location.assign(logoutUrl.toString());
-    return;
-  }
-
-  if (!auth0Client) return;
-  await auth0Client.logout({
-    logoutParams: {
-      returnTo: authRedirectUri()
-    }
-  });
+  window.location.assign("/api/auth/logout");
 }
 
 async function ensureSignedIn(actionLabel) {
@@ -1560,46 +1407,16 @@ async function initAuth() {
       return;
     }
 
-    if (await handleFallbackAuthCallback()) {
-      authState.ready = true;
-      renderAuthState();
-      await loadProfilePreferences();
-      queuePreferenceSave("auth-login");
-      return;
-    }
-
     if (!authState.enabled) {
       authState.ready = true;
       renderAuthState();
       return;
     }
 
-    if (!window.auth0?.createAuth0Client) {
-      authStatus.textContent = "Guest mode";
-      authGreeting.textContent = "Sign in to save preferences and bookings.";
-      return;
-    }
-
-    auth0Client = await window.auth0.createAuth0Client({
-      domain: authConfig.domain,
-      clientId: authConfig.clientId,
-      cacheLocation: authConfig.cacheLocation || "memory",
-      authorizationParams: {
-        redirect_uri: authRedirectUri(),
-        scope: authConfig.scope
-      }
-    });
-
-    if (window.location.search.includes("code=") && window.location.search.includes("state=")) {
-      const result = await auth0Client.handleRedirectCallback();
-      const returnTo = result.appState?.returnTo || window.location.pathname;
-      window.history.replaceState({}, document.title, returnTo);
-    }
-
-    authState.authenticated = await auth0Client.isAuthenticated();
+    const session = await fetch("/api/auth/session").then((response) => response.json());
+    authState.authenticated = Boolean(session.data?.authenticated);
     if (authState.authenticated) {
-      authState.user = await auth0Client.getUser();
-      await accessToken();
+      authState.user = session.data.user;
       renderAuthState();
       await loadProfilePreferences();
       queuePreferenceSave("auth-login");
@@ -1609,8 +1426,16 @@ async function initAuth() {
     renderAuthState();
   } catch {
     authState.ready = true;
-    authStatus.textContent = "Guest mode";
-    authGreeting.textContent = "Sign in to save preferences and bookings.";
+    authState.enabled = true;
+    authState.apiProtectionEnabled = true;
+    authState.authenticated = false;
+    authState.user = null;
+    authState.authMessage = "Secure access could not start. Please refresh and try again.";
+    renderAuthState();
+    authStatus.textContent = "Secure access";
+    authGreeting.textContent = "Secure access is starting. Please refresh and try again.";
+    if (authPortalStatus) authPortalStatus.textContent = "Secure access could not start. Please refresh and try again.";
+    if (authPortalContinue) authPortalContinue.disabled = true;
   }
 }
 

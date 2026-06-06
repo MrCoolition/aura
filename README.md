@@ -37,9 +37,10 @@ AURA_PLATFORM_FEE_BPS
 AURA_DEFAULT_MARKET
 AUTH0_DOMAIN
 AUTH0_CLIENT_ID
+AUTH0_CLIENT_SECRET
+AUTH0_SECRET
 AUTH0_AUDIENCE
 AUTH0_SCOPE
-AUTH0_CACHE_LOCATION
 AURA_ADMIN_EMAILS
 AURA_ADMIN_SUBJECTS
 ```
@@ -48,12 +49,12 @@ The root `index.html` fixes the previous Vercel 404.
 
 ## Auth0 Setup
 
-Create an Auth0 **Single Page Application**. In the quickstart picker, search for **JavaScript**. If you only see framework cards, skip the code quickstart and use the values from the Application Settings.
+Create an Auth0 **Regular Web Application** and use the values from **Application Settings**. AURA uses a server-side callback and HttpOnly session cookie, so set `AUTH0_CLIENT_SECRET` in Vercel from the Auth0 application's client secret. Set `AUTH0_SECRET` to a long random value for signing AURA session cookies.
 
 Allowed Callback URLs:
 
 ```text
-http://localhost:4173, https://aura-omega-rosy.vercel.app
+http://localhost:4173/api/auth/callback, https://aura-omega-rosy.vercel.app/api/auth/callback
 ```
 
 Allowed Logout URLs:

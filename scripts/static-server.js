@@ -20,7 +20,11 @@ const mimeTypes = {
 const apiRoutes = {
   "/api/admin/overview": "api/admin/overview.js",
   "/api/assistants": "api/assistants.js",
+  "/api/auth/callback": "api/auth/callback.js",
   "/api/auth-config": "api/auth-config.js",
+  "/api/auth/login": "api/auth/login.js",
+  "/api/auth/logout": "api/auth/logout.js",
+  "/api/auth/session": "api/auth/session.js",
   "/api/bookings": "api/bookings.js",
   "/api/cleaning-plan": "api/cleaning-plan.js",
   "/api/feedback": "api/feedback.js",
@@ -77,9 +81,16 @@ async function handleApi(request, response, requestUrl) {
   });
   const fetchResponse = await handler(fetchRequest);
   const headers = Object.fromEntries(fetchResponse.headers.entries());
+  const setCookies =
+    typeof fetchResponse.headers.getSetCookie === "function"
+      ? fetchResponse.headers.getSetCookie()
+      : fetchResponse.headers.get("set-cookie")
+        ? [fetchResponse.headers.get("set-cookie")]
+        : [];
+  delete headers["set-cookie"];
   const responseBody = Buffer.from(await fetchResponse.arrayBuffer());
 
-  response.writeHead(fetchResponse.status, headers);
+  response.writeHead(fetchResponse.status, setCookies.length ? { ...headers, "Set-Cookie": setCookies } : headers);
   response.end(responseBody);
 }
 
