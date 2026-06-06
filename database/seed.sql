@@ -124,3 +124,25 @@ values
   ('ffffffff-ffff-4fff-8fff-ffffffffffff', 2, 'Packing list', false, true),
   ('ffffffff-ffff-4fff-8fff-ffffffffffff', 3, 'Dining hold', false, false)
 on conflict do nothing;
+
+insert into aura_memory_nodes (client_user_id, label, memory_value, strength, source)
+values
+  ('44444444-4444-4444-8444-444444444444', 'Dining', 'Late seating, quiet tables', 92, 'seed'),
+  ('44444444-4444-4444-8444-444444444444', 'Home', 'White towels, citrus scent', 88, 'seed'),
+  ('44444444-4444-4444-8444-444444444444', 'Inventory', 'Topo Chico, olive oil, pods', 84, 'seed'),
+  ('44444444-4444-4444-8444-444444444444', 'Calendar', 'No calls after airport days', 79, 'seed')
+on conflict do nothing;
+
+insert into autopilot_loops (client_user_id, title, body, readiness, estimated_value)
+values
+  ('44444444-4444-4444-8444-444444444444', 'Guest Mode', 'Arm a 2-hour reset before guests arrive.', 91, '$54 saved friction'),
+  ('44444444-4444-4444-8444-444444444444', 'Fridge Sentinel', 'Restock before the week gets loud.', 84, '18 min decision saved'),
+  ('44444444-4444-4444-8444-444444444444', 'Calendar Shield', 'Move a low-value call without touching protected focus time.', 78, '2.1h reclaimed')
+on conflict do nothing;
+
+insert into assistant_missions (assistant_profile_id, title, market, payout_cents, route_minutes, trust_score, mission_brief)
+values
+  ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'Penthouse reset + restock', 'Miami', 14800, 31, 97, 'Home reset, guest towels, sparkling water, reservation watch.'),
+  ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Dry cleaning + gift run', 'Miami', 8600, 18, 91, 'Two pickups, one return, client taste profile attached.'),
+  ('cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'Travel calm pack', 'Miami', 12200, 42, 94, 'Packing list, car timing, dinner hold, weather note.')
+on conflict do nothing;

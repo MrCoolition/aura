@@ -23,7 +23,9 @@
         </a>
         <nav class="topnav" aria-label="AURA sections">
           <a href="#marketplace">Marketplace</a>
+          <a href="#booking-engine">Booking</a>
           <a href="#calendar">Calendar</a>
+          <a href="#lifeprint">Lifeprint</a>
           <a href="#inventory">Inventory</a>
           <a href="#earn">Earn</a>
         </nav>
@@ -114,6 +116,21 @@
               </span>
             </div>
 
+            <div class="reactor-strip" aria-label="Live booking intelligence">
+              <div>
+                <span>Match heat</span>
+                <strong id="matchHeat">94</strong>
+              </div>
+              <div>
+                <span>Friction saved</span>
+                <strong id="frictionSaved">2.4h</strong>
+              </div>
+              <div>
+                <span>Repeat odds</span>
+                <strong id="repeatOdds">71%</strong>
+              </div>
+            </div>
+
             <div class="console-actions">
               <button class="primary-action" id="bookRequest" type="button">Match now</button>
               <button class="ghost-action" id="optimizeDay" type="button">Optimize day</button>
@@ -138,6 +155,43 @@
           <div>
             <strong>11 min</strong>
             <span>median match time</span>
+          </div>
+        </section>
+
+        <section class="artillery-section" id="booking-engine" aria-labelledby="booking-engine-title">
+          <div class="section-heading">
+            <p class="eyebrow">Intent Reactor</p>
+            <h2 id="booking-engine-title">One request becomes a priced, routed, trusted operation</h2>
+            <p>AURA converts messy life admin into task atoms, assistant fit, payout math, route compression, and a live command plan.</p>
+          </div>
+          <div class="reactor-grid">
+            <article class="reactor-core" aria-label="Booking reactor">
+              <div class="reactor-ring" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+                <strong>A</strong>
+              </div>
+              <div>
+                <h3 id="reactorMode">Home reset reactor</h3>
+                <p id="reactorSummary">Splitting request into home, inventory, calendar, and proof signals.</p>
+              </div>
+              <div class="atom-grid" id="intentAtoms"></div>
+            </article>
+            <article class="match-lattice" aria-label="Assistant match lattice">
+              <div class="panel-title">
+                <h3>Trust lattice</h3>
+                <span id="latticeWinner">Marisol V.</span>
+              </div>
+              <div id="matchLattice"></div>
+            </article>
+            <article class="value-stack" aria-label="Booking value stack">
+              <div class="panel-title">
+                <h3>Value stack</h3>
+                <span id="marginSignal">18% take</span>
+              </div>
+              <div id="valueStack"></div>
+            </article>
           </div>
         </section>
 
@@ -170,6 +224,36 @@
             <p>Cleaning, errands, hosting, and travel work is turned into verified steps with photo proof and client notes.</p>
           </div>
           <div class="checklist-board" id="checklistBoard"></div>
+        </section>
+
+        <section class="lifeprint-section" id="lifeprint" aria-labelledby="lifeprint-title">
+          <div class="section-heading">
+            <p class="eyebrow">Lifeprint OS</p>
+            <h2 id="lifeprint-title">AURA remembers the household, then predicts the next move</h2>
+            <p>The memory layer binds preferences, inventory, calendar risk, spend patterns, and assistant outcomes into proactive work.</p>
+          </div>
+          <div class="lifeprint-grid">
+            <article class="memory-map" aria-label="Household memory graph">
+              <div class="memory-core">
+                <img src="/assets/aura-logo-transparent.png" alt="">
+              </div>
+              <div id="memoryNodes"></div>
+            </article>
+            <article class="preask-queue" aria-label="Proactive AURA queue">
+              <div class="panel-title">
+                <h3>Pre-ask queue</h3>
+                <span id="autopilotReadiness">82% ready</span>
+              </div>
+              <div id="autopilotQueue"></div>
+            </article>
+            <article class="preference-vault" aria-label="Preference vault">
+              <div class="panel-title">
+                <h3>Preference vault</h3>
+                <span>Household black tier</span>
+              </div>
+              <div id="preferenceVault"></div>
+            </article>
+          </div>
         </section>
 
         <section class="inventory-section" id="inventory" aria-labelledby="inventory-title">
@@ -220,20 +304,32 @@
 
         <section class="earn-section" id="earn" aria-labelledby="earn-title">
           <div class="section-heading">
-            <p class="eyebrow">Be the assistant</p>
-            <h2 id="earn-title">Turn trust, taste, and hustle into revenue</h2>
-            <p>Assistants get route-smart tasks, premium clients, clear checklists, instant feedback, and transparent payouts.</p>
+            <p class="eyebrow">Assistant Mission Control</p>
+            <h2 id="earn-title">The supply side gets an earning cockpit, not a gig list</h2>
+            <p>Assistants see payout gravity, route compression, proofstream tasks, trust score, and next-best jobs in one command deck.</p>
           </div>
-          <div class="earn-grid">
-            <div>
-              <h3>Provider launchpad</h3>
-              <ul class="launch-list">
-                <li><span>1</span> Verify identity and preferred markets</li>
-                <li><span>2</span> Pick specialties and minimum rates</li>
-                <li><span>3</span> Accept AI bundled tasks with payout clarity</li>
-                <li><span>4</span> Grow repeat clients and premium badges</li>
-              </ul>
-            </div>
+          <div class="mission-grid">
+            <article class="mission-command">
+              <div class="panel-title">
+                <h3>Mission queue</h3>
+                <span id="routeLift">+$184 route lift</span>
+              </div>
+              <div id="missionQueue"></div>
+            </article>
+            <article class="route-stack">
+              <div class="panel-title">
+                <h3>Route gravity</h3>
+                <span>3 jobs, 1 loop</span>
+              </div>
+              <div id="routeStack"></div>
+            </article>
+            <article class="proofstream">
+              <div class="panel-title">
+                <h3>Proofstream</h3>
+                <span id="proofScore">96 trust</span>
+              </div>
+              <div id="proofstream"></div>
+            </article>
             <div class="earnings-panel">
               <span>Estimated weekly gross</span>
               <strong id="weeklyGross">$1,860</strong>

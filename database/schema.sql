@@ -241,11 +241,68 @@ create table if not exists marketplace_metrics_daily (
   average_rating numeric(3,2) not null default 5.00
 );
 
+create table if not exists match_runs (
+  id uuid primary key default gen_random_uuid(),
+  service_request_id uuid references service_requests(id) on delete cascade,
+  winning_assistant_profile_id uuid references assistant_profiles(id) on delete set null,
+  service_category text not null,
+  match_score integer not null check (match_score between 0 and 100),
+  client_total_cents integer not null,
+  platform_fee_cents integer not null,
+  assistant_payout_cents integer not null,
+  task_atoms jsonb not null default '[]'::jsonb,
+  scorecard jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists aura_memory_nodes (
+  id uuid primary key default gen_random_uuid(),
+  client_user_id uuid references aura_users(id) on delete cascade,
+  label text not null,
+  memory_value text not null,
+  strength integer not null default 72 check (strength between 1 and 100),
+  source text not null default 'aura',
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists autopilot_loops (
+  id uuid primary key default gen_random_uuid(),
+  client_user_id uuid references aura_users(id) on delete cascade,
+  title text not null,
+  body text not null,
+  readiness integer not null default 72 check (readiness between 1 and 100),
+  estimated_value text,
+  status text not null default 'suggested',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists assistant_missions (
+  id uuid primary key default gen_random_uuid(),
+  assistant_profile_id uuid references assistant_profiles(id) on delete set null,
+  title text not null,
+  market text not null default 'Miami',
+  payout_cents integer not null,
+  route_minutes integer not null,
+  trust_score integer not null check (trust_score between 0 and 100),
+  mission_brief text not null,
+  status text not null default 'available',
+  payload jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  accepted_at timestamptz
+);
+
 create index if not exists idx_assistant_profiles_market_status on assistant_profiles (home_market, status, rating desc);
 create index if not exists idx_service_requests_market_status on service_requests (market, status, created_at desc);
 create index if not exists idx_bookings_assistant_status on bookings (assistant_profile_id, status, scheduled_start);
 create index if not exists idx_feedback_assistant_created on feedback_events (assistant_profile_id, created_at desc);
 create index if not exists idx_inventory_items_location_status on inventory_items (location_id, status);
+create index if not exists idx_match_runs_request_created on match_runs (service_request_id, created_at desc);
+create index if not exists idx_memory_nodes_client_strength on aura_memory_nodes (client_user_id, strength desc);
+create index if not exists idx_autopilot_loops_client_status on autopilot_loops (client_user_id, status, readiness desc);
+create index if not exists idx_assistant_missions_market_status on assistant_missions (market, status, trust_score desc);
 
 create or replace view assistant_marketplace_view as
 select

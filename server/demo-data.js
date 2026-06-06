@@ -40,3 +40,37 @@ export const demoInventoryDetections = [
   { item: "Olive oil", status: "Running low", action: "Replace with saved preference" },
   { item: "Laundry pods", status: "Low stock", action: "Create cleaning supply task" }
 ];
+
+export const demoMemoryNodes = [
+  { label: "Dining", value: "Late seating, quiet tables", strength: 92 },
+  { label: "Home", value: "White towels, citrus scent", strength: 88 },
+  { label: "Inventory", value: "Topo Chico, olive oil, pods", strength: 84 },
+  { label: "Calendar", value: "No calls after airport days", strength: 79 }
+];
+
+export const demoAssistantMissions = [
+  {
+    title: "Penthouse reset + restock",
+    market: "Miami",
+    payout_cents: 14800,
+    route_minutes: 31,
+    trust_score: 97,
+    mission_brief: "Home reset, guest towels, sparkling water, reservation watch."
+  },
+  {
+    title: "Dry cleaning + gift run",
+    market: "Miami",
+    payout_cents: 8600,
+    route_minutes: 18,
+    trust_score: 91,
+    mission_brief: "Two pickups, one return, client taste profile attached."
+  },
+  {
+    title: "Travel calm pack",
+    market: "Miami",
+    payout_cents: 12200,
+    route_minutes: 42,
+    trust_score: 94,
+    mission_brief: "Packing list, car timing, dinner hold, weather note."
+  }
+];

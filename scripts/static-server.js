@@ -21,7 +21,9 @@ const apiRoutes = {
   "/api/assistants": "api/assistants.js",
   "/api/bookings": "api/bookings.js",
   "/api/feedback": "api/feedback.js",
-  "/api/inventory": "api/inventory.js"
+  "/api/inventory": "api/inventory.js",
+  "/api/memory": "api/memory.js",
+  "/api/missions": "api/missions.js"
 };
 
 function resolvePath(url) {

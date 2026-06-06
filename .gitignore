@@ -6,3 +6,8 @@ node_modules/
 npm-debug.log*
 dist/
 coverage/
+assets/aura-brand-board.png
+assets/aura-gradient-logo.png
+assets/aura-sunset-logo.png
+assets/aura-tux-logo.png
+assets/aura-upgraded-poster.png

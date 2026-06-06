@@ -24,6 +24,22 @@ AURA is built as a two-sided marketplace:
    - Image scans become detected household items and restock actions.
    - Detections can convert into shopping lists, cleaning prep, and recurring assistant tasks.
 
+## Artillery Layer
+
+1. Intent Reactor
+   - Decomposes a client request into task atoms.
+   - Scores assistant fit, route compression, friction saved, repeat odds, and platform take.
+   - Persists match runs through `match_runs` when Neon is connected.
+
+2. Lifeprint OS
+   - Stores household memory as weighted nodes rather than flat notes.
+   - Produces a pre-ask queue so AURA can suggest work before the client asks.
+   - Uses `aura_memory_nodes` and `autopilot_loops` as the persistence layer.
+
+3. Assistant Mission Control
+   - Gives assistants a cockpit for payout gravity, route loops, trust proof, and weekly earnings.
+   - Uses `assistant_missions` for future supply-side job dispatch.
+
 ## Data Model
 
 Run `database/schema.sql` on Neon first, then `database/seed.sql` for demo data.

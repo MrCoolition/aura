@@ -11,13 +11,14 @@ export async function POST(request) {
   const urgency = String(body.urgency || "today").trim();
   const budgetCents = Number(body.budgetCents || 14000);
   const market = String(body.market || process.env.AURA_DEFAULT_MARKET || "Miami").trim();
+  const matchScore = Math.max(0, Math.min(100, Number(body.matchScore || 88)));
 
   if (!taskSummary) {
     return json({ ok: false, message: "taskSummary is required" }, 400);
   }
 
   const platformFeeBps = Number(process.env.AURA_PLATFORM_FEE_BPS || 1800);
-  const platformFeeCents = Math.round(budgetCents * (platformFeeBps / 10000));
+  const platformFeeCents = Number(body.platformFeeCents || Math.round(budgetCents * (platformFeeBps / 10000)));
   const assistantPayoutCents = budgetCents - platformFeeCents;
   const sql = await getSql();
 
@@ -58,10 +59,39 @@ export async function POST(request) {
       ${JSON.stringify({
         platformFeeCents,
         assistantPayoutCents,
+        matchScore,
         source: "web-console"
       })}::jsonb
     )
     returning id, status, service_category, task_summary, budget_cents, created_at
+  `;
+
+  await sql`
+    insert into match_runs (
+      service_request_id,
+      service_category,
+      match_score,
+      client_total_cents,
+      platform_fee_cents,
+      assistant_payout_cents,
+      task_atoms,
+      scorecard
+    )
+    values (
+      ${rows[0].id},
+      ${serviceCategory},
+      ${matchScore},
+      ${budgetCents},
+      ${platformFeeCents},
+      ${assistantPayoutCents},
+      ${JSON.stringify(body.taskAtoms || [])}::jsonb,
+      ${JSON.stringify({
+        assistantId: body.assistantId || null,
+        urgency,
+        market,
+        source: "intent-reactor"
+      })}::jsonb
+    )
   `;
 
   return json({
