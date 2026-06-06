@@ -125,6 +125,71 @@ values
   ('ffffffff-ffff-4fff-8fff-ffffffffffff', 3, 'Dining hold', false, false)
 on conflict do nothing;
 
+insert into cleaning_plans (
+  id,
+  client_user_id,
+  level,
+  priority,
+  room_count,
+  task_count,
+  proof_count,
+  estimated_minutes,
+  status,
+  payload
+)
+values (
+  '12121212-1212-4121-8121-121212121212',
+  '44444444-4444-4444-8444-444444444444',
+  'reset',
+  'detail',
+  4,
+  19,
+  10,
+  102,
+  'ready',
+  '{"source": "seed", "name": "Guest-ready Cleanprint"}'::jsonb
+)
+on conflict (id) do update set
+  task_count = excluded.task_count,
+  proof_count = excluded.proof_count,
+  estimated_minutes = excluded.estimated_minutes,
+  payload = excluded.payload;
+
+insert into cleaning_plan_rooms (
+  id,
+  cleaning_plan_id,
+  room_name,
+  room_zone,
+  estimated_minutes,
+  proof_count,
+  position
+)
+values
+  ('13131313-1313-4131-8131-131313131313', '12121212-1212-4121-8121-121212121212', 'Kitchen', 'Food + surfaces', 34, 3, 1),
+  ('14141414-1414-4141-8141-141414141414', '12121212-1212-4121-8121-121212121212', 'Primary bath', 'Spa standard', 28, 3, 2),
+  ('15151515-1515-4151-8151-151515151515', '12121212-1212-4121-8121-121212121212', 'Living room', 'Flow + comfort', 24, 2, 3),
+  ('16161616-1616-4161-8161-161616161616', '12121212-1212-4121-8121-121212121212', 'Entry', 'First impression', 16, 2, 4)
+on conflict (id) do update set
+  estimated_minutes = excluded.estimated_minutes,
+  proof_count = excluded.proof_count;
+
+insert into cleaning_plan_tasks (id, cleaning_plan_room_id, label, position, requires_photo)
+values
+  ('17171717-1717-4171-8171-171717171717', '13131313-1313-4131-8131-131313131313', 'Clear counters and stage items by use', 1, false),
+  ('18181818-1818-4181-8181-181818181818', '13131313-1313-4131-8131-131313131313', 'Sanitize sink, faucet, handles, and backsplash', 2, false),
+  ('19191919-1919-4191-8191-191919191919', '13131313-1313-4131-8131-131313131313', 'Final photo proof from kitchen entry', 3, true),
+  ('20202020-2020-4202-8202-202020202020', '14141414-1414-4141-8141-141414141414', 'Disinfect vanity, sink, faucet, and mirror', 1, false),
+  ('21212121-2121-4212-8212-212121212121', '14141414-1414-4141-8141-141414141414', 'Replace towels with saved fold standard', 2, false),
+  ('22222222-2222-4222-8222-222222222221', '14141414-1414-4141-8141-141414141414', 'Final photo proof from bath threshold', 3, true),
+  ('23232323-2323-4232-8232-232323232323', '15151515-1515-4151-8151-151515151515', 'Reset pillows, throws, remotes, books, and surfaces', 1, false),
+  ('24242424-2424-4242-8242-242424242424', '15151515-1515-4151-8151-151515151515', 'Final photo proof from seating angle', 2, true),
+  ('25252525-2525-4252-8252-252525252525', '16161616-1616-4161-8161-161616161616', 'Clear entry clutter and align keys, shoes, and bags', 1, false),
+  ('26262626-2626-4262-8262-262626262626', '16161616-1616-4161-8161-161616161616', 'Final photo proof from arrival angle', 2, true)
+on conflict (id) do update set
+  label = excluded.label,
+  position = excluded.position,
+  requires_photo = excluded.requires_photo;
+
 insert into aura_memory_nodes (client_user_id, label, memory_value, strength, source)
 values
   ('44444444-4444-4444-8444-444444444444', 'Dining', 'Late seating, quiet tables', 92, 'seed'),

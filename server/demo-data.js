@@ -74,3 +74,38 @@ export const demoAssistantMissions = [
     mission_brief: "Packing list, car timing, dinner hold, weather note."
   }
 ];
+
+export const demoCleaningRooms = [
+  {
+    id: "kitchen",
+    name: "Kitchen",
+    zone: "Food + surfaces",
+    estimated_minutes: 34,
+    proof_count: 3,
+    task_count: 5
+  },
+  {
+    id: "primary-bath",
+    name: "Primary bath",
+    zone: "Spa standard",
+    estimated_minutes: 28,
+    proof_count: 3,
+    task_count: 5
+  },
+  {
+    id: "living",
+    name: "Living room",
+    zone: "Flow + comfort",
+    estimated_minutes: 24,
+    proof_count: 2,
+    task_count: 5
+  },
+  {
+    id: "entry",
+    name: "Entry",
+    zone: "First impression",
+    estimated_minutes: 16,
+    proof_count: 2,
+    task_count: 4
+  }
+];

@@ -162,6 +162,49 @@ create table if not exists job_checklist_items (
   created_at timestamptz not null default now()
 );
 
+create table if not exists cleaning_plans (
+  id uuid primary key default gen_random_uuid(),
+  service_request_id uuid references service_requests(id) on delete set null,
+  client_user_id uuid references aura_users(id) on delete set null,
+  level text not null default 'reset',
+  priority text not null default 'detail',
+  room_count integer not null default 0,
+  task_count integer not null default 0,
+  proof_count integer not null default 0,
+  estimated_minutes integer not null default 0,
+  status text not null default 'draft',
+  payload jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists cleaning_plan_rooms (
+  id uuid primary key default gen_random_uuid(),
+  cleaning_plan_id uuid references cleaning_plans(id) on delete cascade,
+  room_name text not null,
+  room_zone text not null default 'General',
+  estimated_minutes integer not null default 0,
+  proof_count integer not null default 0,
+  position integer not null,
+  status text not null default 'open',
+  created_at timestamptz not null default now()
+);
+
+create table if not exists cleaning_plan_tasks (
+  id uuid primary key default gen_random_uuid(),
+  cleaning_plan_room_id uuid references cleaning_plan_rooms(id) on delete cascade,
+  label text not null,
+  position integer not null,
+  requires_photo boolean not null default false,
+  status text not null default 'open',
+  completed_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists cleaning_plans_status_idx on cleaning_plans(status);
+create index if not exists cleaning_plan_rooms_plan_idx on cleaning_plan_rooms(cleaning_plan_id, position);
+create index if not exists cleaning_plan_tasks_room_idx on cleaning_plan_tasks(cleaning_plan_room_id, position);
+
 create table if not exists feedback_events (
   id uuid primary key default gen_random_uuid(),
   booking_id uuid references bookings(id) on delete set null,

@@ -166,16 +166,19 @@
           </div>
           <div class="reactor-grid">
             <article class="reactor-core" aria-label="Booking reactor">
-              <div class="reactor-ring" aria-hidden="true">
-                <span></span>
-                <span></span>
-                <span></span>
-                <strong>A</strong>
-              </div>
-              <div>
+              <div class="panel-title reactor-panel-title">
                 <h3 id="reactorMode">Home reset reactor</h3>
+                <span id="reactorValueBadge">2.9h saved</span>
+              </div>
+              <div class="operation-brief">
+                <div>
+                  <span>Live ops brief</span>
+                  <strong id="reactorHeadline">Marisol V. can execute in 18 minutes</strong>
+                </div>
                 <p id="reactorSummary">Splitting request into home, inventory, calendar, and proof signals.</p>
               </div>
+              <div class="reactor-kpis" id="reactorKpis"></div>
+              <div class="ops-flow" id="opsFlow"></div>
               <div class="atom-grid" id="intentAtoms"></div>
             </article>
             <article class="match-lattice" aria-label="Assistant match lattice">
@@ -219,10 +222,44 @@
 
         <section class="split-section" id="checklists" aria-labelledby="checklist-title">
           <div class="section-heading">
-            <p class="eyebrow">Checklist studio</p>
-            <h2 id="checklist-title">Support playbooks that feel premium</h2>
-            <p>Cleaning, errands, hosting, and travel work is turned into verified steps with photo proof and client notes.</p>
+            <p class="eyebrow">Cleanprint Builder</p>
+            <h2 id="checklist-title">Room-by-room cleaning lists generated like an operations map</h2>
+            <p>AURA builds a verified room plan with timing, proof points, reset standards, and assistant-ready steps.</p>
           </div>
+          <div class="room-builder" aria-label="Room by room cleaning builder">
+            <div class="panel-title">
+              <h3>Rooms</h3>
+              <span id="cleanprintIntensity">Reset</span>
+            </div>
+            <div class="room-chip-grid" id="roomChipGrid"></div>
+            <div class="cleaning-controls">
+              <label>
+                <span>Standard</span>
+                <select id="cleaningLevel">
+                  <option value="reset" selected>Premium reset</option>
+                  <option value="deep">Deep clean</option>
+                  <option value="turnover">Guest turnover</option>
+                </select>
+              </label>
+              <label>
+                <span>Priority</span>
+                <select id="cleaningPriority">
+                  <option value="speed">Fastest route</option>
+                  <option value="detail" selected>Highest detail</option>
+                  <option value="photo">Most proof</option>
+                </select>
+              </label>
+            </div>
+            <button class="primary-action" id="buildCleanprint" type="button">Build room list</button>
+            <p class="cleanprint-status" id="cleanprintStatus">Ready to generate an assistant-ready room map.</p>
+            <div class="cleanprint-summary">
+              <div><strong id="cleanRoomCount">0</strong><span>rooms</span></div>
+              <div><strong id="cleanTaskCount">0</strong><span>tasks</span></div>
+              <div><strong id="cleanProofCount">0</strong><span>proofs</span></div>
+              <div><strong id="cleanMinutes">0m</strong><span>estimate</span></div>
+            </div>
+          </div>
+          <div class="room-plan" id="roomPlan" aria-live="polite"></div>
           <div class="checklist-board" id="checklistBoard"></div>
         </section>
 

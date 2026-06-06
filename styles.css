@@ -551,7 +551,7 @@ select {
 .memory-map {
   position: relative;
   display: grid;
-  align-content: space-between;
+  align-content: start;
   gap: 18px;
   overflow: hidden;
   padding: 20px;
@@ -574,45 +574,93 @@ select {
   z-index: 1;
 }
 
-.reactor-ring {
-  position: relative;
-  width: min(100%, 340px);
-  aspect-ratio: 1;
-  margin: 0 auto;
-  border: 1px solid rgba(22, 200, 255, 0.32);
-  border-radius: 50%;
+.reactor-panel-title {
+  padding: 0;
+}
+
+.operation-brief {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid rgba(22, 200, 255, 0.28);
+  border-radius: var(--radius);
   background:
-    radial-gradient(circle at center, rgba(22, 200, 255, 0.18), transparent 29%),
-    conic-gradient(from 20deg, rgba(22, 200, 255, 0.32), rgba(155, 66, 255, 0.18), rgba(69, 230, 161, 0.16), rgba(22, 200, 255, 0.32));
-  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.62);
+    linear-gradient(135deg, rgba(22, 200, 255, 0.14), rgba(155, 66, 255, 0.07)),
+    rgba(255, 255, 255, 0.035);
 }
 
-.reactor-ring span {
-  position: absolute;
+.operation-brief span {
+  color: var(--cyan);
+  font-size: 0.74rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.operation-brief strong {
   display: block;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 50%;
+  margin-top: 4px;
+  font-size: 1.42rem;
 }
 
-.reactor-ring span:nth-child(1) {
-  inset: 12%;
+.operation-brief p {
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0;
 }
 
-.reactor-ring span:nth-child(2) {
-  inset: 26%;
+.reactor-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
 }
 
-.reactor-ring span:nth-child(3) {
-  inset: 40%;
+.reactor-kpis div {
+  display: grid;
+  gap: 5px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.04);
 }
 
-.reactor-ring strong {
-  position: absolute;
-  inset: 0;
+.reactor-kpis span,
+.ops-step small {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.reactor-kpis strong {
+  font-size: 1.12rem;
+}
+
+.ops-flow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ops-step {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: var(--radius);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.ops-step b {
   display: grid;
   place-items: center;
-  font-size: 4rem;
-  line-height: 1;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius);
+  color: #061018;
+  background: var(--cyan);
+}
+
+.ops-step span {
+  color: var(--green);
+  font-weight: 900;
 }
 
 .atom-grid {
@@ -1010,6 +1058,165 @@ select {
   gap: 14px;
 }
 
+.room-builder,
+.room-plan {
+  grid-column: span 2;
+}
+
+.room-builder {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, rgba(22, 200, 255, 0.08), transparent 40%),
+    rgba(12, 16, 24, 0.94);
+}
+
+.room-chip-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.room-chip {
+  min-height: 78px;
+  display: grid;
+  gap: 5px;
+  align-content: center;
+  text-align: left;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.room-chip span {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.room-chip.is-selected {
+  border-color: rgba(22, 200, 255, 0.8);
+  background:
+    linear-gradient(135deg, rgba(22, 200, 255, 0.2), rgba(155, 66, 255, 0.12)),
+    rgba(255, 255, 255, 0.04);
+}
+
+.cleaning-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.cleanprint-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.cleanprint-summary div {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.cleanprint-summary strong {
+  font-size: 1.18rem;
+}
+
+.cleanprint-summary span {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.cleanprint-status {
+  min-height: 22px;
+  margin: 10px 0 0;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.room-plan {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.room-card,
+.room-plan-empty {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-strong);
+}
+
+.room-card {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.room-card header {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: start;
+}
+
+.room-card header span,
+.room-metrics span {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.room-card h3 {
+  margin: 4px 0 0;
+}
+
+.room-metrics {
+  display: grid;
+  gap: 4px;
+  text-align: right;
+}
+
+.room-task-list {
+  display: grid;
+  gap: 8px;
+}
+
+.room-task {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 9px;
+  align-items: start;
+  color: var(--muted);
+  line-height: 1.42;
+}
+
+.room-task input {
+  width: 17px;
+  height: 17px;
+  margin-top: 2px;
+  accent-color: var(--green);
+}
+
+.room-plan-empty {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+}
+
+.room-plan-empty span {
+  color: var(--muted);
+}
+
 .checklist-card {
   padding: 18px;
 }
@@ -1251,14 +1458,25 @@ output {
 
   .assistant-list,
   .checklist-board,
+  .room-builder,
+  .room-plan,
   .inventory-lab,
   .feedback-console,
   .earn-grid {
     grid-template-columns: 1fr;
   }
 
-  .checklist-board {
+  .checklist-board,
+  .room-builder,
+  .room-plan {
     grid-column: auto;
+  }
+
+  .reactor-kpis,
+  .ops-flow,
+  .room-chip-grid,
+  .cleanprint-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1307,8 +1525,14 @@ output {
   }
 
   .atom-grid,
+  .reactor-kpis,
+  .ops-flow,
   #memoryNodes,
-  .mission-meta {
+  .mission-meta,
+  .room-chip-grid,
+  .cleaning-controls,
+  .cleanprint-summary,
+  .room-plan {
     grid-template-columns: 1fr;
   }
 

@@ -15,6 +15,7 @@ AURA is built as a two-sided marketplace:
 2. Checklist intelligence
    - Every service category has repeatable playbooks.
    - Assistants complete steps with proof, notes, and client confirmations.
+   - Cleanprint Builder generates room-by-room cleaning plans with timing, proof counts, and assistant-ready tasks.
 
 3. Feedback engine
    - Ratings, tips, sentiment, and coaching notes feed assistant ranking.
@@ -55,6 +56,9 @@ Core tables:
 - `calendar_holds`
 - `task_templates`
 - `job_checklist_items`
+- `cleaning_plans`
+- `cleaning_plan_rooms`
+- `cleaning_plan_tasks`
 - `feedback_events`
 - `inventory_locations`
 - `inventory_items`

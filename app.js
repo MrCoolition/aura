@@ -76,6 +76,121 @@ const checklists = [
   }
 ];
 
+const cleaningRooms = [
+  {
+    id: "kitchen",
+    name: "Kitchen",
+    zone: "Food + surfaces",
+    minutes: 34,
+    proof: 3,
+    tasks: [
+      "Clear counters and stage items by use",
+      "Sanitize sink, faucet, handles, and backsplash",
+      "Wipe appliances, cabinet touchpoints, and cooktop",
+      "Reset fridge front and remove expired visible items",
+      "Restock paper goods and preferred water"
+    ],
+    deepAdds: ["Degrease hood and cabinet edges", "Detail inside microwave and drawer pulls"],
+    turnoverAdds: ["Stage coffee, glasses, and guest snack zone"]
+  },
+  {
+    id: "primary-bath",
+    name: "Primary bath",
+    zone: "Spa standard",
+    minutes: 28,
+    proof: 3,
+    tasks: [
+      "Disinfect vanity, sink, faucet, and mirror",
+      "Scrub shower glass, fixtures, and drain line",
+      "Clean toilet exterior, seat, base, and floor edge",
+      "Replace towels with saved fold standard",
+      "Confirm scent, tissue, soap, and guest-ready counter"
+    ],
+    deepAdds: ["Descale shower head and detail grout lines", "Polish metal fixtures to reflection check"],
+    turnoverAdds: ["Stage fresh hand towels and sealed guest amenities"]
+  },
+  {
+    id: "guest-bath",
+    name: "Guest bath",
+    zone: "Arrival impression",
+    minutes: 22,
+    proof: 3,
+    tasks: [
+      "Disinfect sink, faucet, mirror, and counter",
+      "Clean toilet and floor perimeter",
+      "Replace towels and align hand soap",
+      "Restock tissue and visible guest supplies",
+      "Final scent and dry-floor check"
+    ],
+    deepAdds: ["Detail grout corners and vent face", "Polish fixtures and baseboards"],
+    turnoverAdds: ["Set guest towel stack and visible amenity tray"]
+  },
+  {
+    id: "living",
+    name: "Living room",
+    zone: "Visual reset",
+    minutes: 24,
+    proof: 2,
+    tasks: [
+      "Clear surfaces and return objects to memory map",
+      "Dust tables, media console, lamps, and frames",
+      "Reset pillows, throws, remotes, and charging areas",
+      "Vacuum traffic paths and under visible furniture",
+      "Final room photo from entry angle"
+    ],
+    deepAdds: ["Detail baseboards and under cushions", "Spot clean glass and high-touch edges"],
+    turnoverAdds: ["Stage room for first-view guest impression"]
+  },
+  {
+    id: "bedroom",
+    name: "Bedroom",
+    zone: "Rest standard",
+    minutes: 30,
+    proof: 2,
+    tasks: [
+      "Make bed to hotel fold standard",
+      "Clear nightstands and align charging items",
+      "Dust surfaces, lamps, mirror, and visible shelves",
+      "Reset laundry, hamper, and wardrobe overflow",
+      "Vacuum floor and confirm calm-room finish"
+    ],
+    deepAdds: ["Rotate detail pass under bed edge", "Wipe closet handles and drawer faces"],
+    turnoverAdds: ["Change linens and stage guest sleep setup"]
+  },
+  {
+    id: "entry",
+    name: "Entry",
+    zone: "First 10 seconds",
+    minutes: 16,
+    proof: 2,
+    tasks: [
+      "Clear shoes, bags, mail, and visual clutter",
+      "Wipe console, door handles, and switch plates",
+      "Reset keys, tray, scent, and arrival surface",
+      "Vacuum or mop entry path",
+      "Photo proof from door swing angle"
+    ],
+    deepAdds: ["Detail threshold, baseboard, and door scuffs"],
+    turnoverAdds: ["Stage welcome tray or guest access note"]
+  },
+  {
+    id: "laundry",
+    name: "Laundry",
+    zone: "Utility flow",
+    minutes: 20,
+    proof: 2,
+    tasks: [
+      "Sort visible laundry by client preference",
+      "Wipe machines, folding surface, and lint area",
+      "Restock detergent, pods, dryer sheets, and bags",
+      "Fold or stage completed items",
+      "Flag damaged, delicate, or unknown garments"
+    ],
+    deepAdds: ["Clean lint trap housing and machine gasket", "Detail storage shelf and floor corners"],
+    turnoverAdds: ["Run guest towel and sheet readiness check"]
+  }
+];
+
 const inventorySamples = [
   { item: "Sparkling water", status: "Low stock", action: "Add 12-pack to restock run" },
   { item: "Guest towels", status: "Ready", action: "Place in guest bath" },
@@ -211,6 +326,17 @@ const assistantList = document.querySelector("#assistantList");
 const timeline = document.querySelector("#timeline");
 const calendarInsightsEl = document.querySelector("#calendarInsights");
 const checklistBoard = document.querySelector("#checklistBoard");
+const roomChipGrid = document.querySelector("#roomChipGrid");
+const cleaningLevel = document.querySelector("#cleaningLevel");
+const cleaningPriority = document.querySelector("#cleaningPriority");
+const cleanprintIntensity = document.querySelector("#cleanprintIntensity");
+const buildCleanprint = document.querySelector("#buildCleanprint");
+const roomPlan = document.querySelector("#roomPlan");
+const cleanRoomCount = document.querySelector("#cleanRoomCount");
+const cleanTaskCount = document.querySelector("#cleanTaskCount");
+const cleanProofCount = document.querySelector("#cleanProofCount");
+const cleanMinutes = document.querySelector("#cleanMinutes");
+const cleanprintStatus = document.querySelector("#cleanprintStatus");
 const detectionList = document.querySelector("#detectionList");
 const inventoryUpload = document.querySelector("#inventoryUpload");
 const inventoryPreview = document.querySelector("#inventoryPreview");
@@ -226,7 +352,11 @@ const matchHeat = document.querySelector("#matchHeat");
 const frictionSaved = document.querySelector("#frictionSaved");
 const repeatOdds = document.querySelector("#repeatOdds");
 const reactorMode = document.querySelector("#reactorMode");
+const reactorHeadline = document.querySelector("#reactorHeadline");
+const reactorValueBadge = document.querySelector("#reactorValueBadge");
 const reactorSummary = document.querySelector("#reactorSummary");
+const reactorKpis = document.querySelector("#reactorKpis");
+const opsFlow = document.querySelector("#opsFlow");
 const intentAtoms = document.querySelector("#intentAtoms");
 const matchLattice = document.querySelector("#matchLattice");
 const valueStack = document.querySelector("#valueStack");
@@ -355,12 +485,52 @@ function renderReactor(service) {
   const average = Math.round(atoms.reduce((sum, atom) => sum + atom.score, 0) / atoms.length);
   const friction = (1.4 + average / 95).toFixed(1);
   const repeat = Math.min(91, Math.round(54 + average / 3));
+  const assistant = topAssistant(service);
+  const { total, fee, payout } = quoteState();
+  const routeCompression = timeSelect.value === "urgent" ? 22 : 38;
+  const dispatchSteps = [
+    { label: "Parse", value: `${atoms.length} atoms`, detail: "AURA decomposes the request" },
+    { label: "Price", value: currency(total), detail: `${currency(fee)} platform revenue` },
+    { label: "Match", value: `${assistant.fit} fit`, detail: `${assistant.name}, ${assistant.eta}m ETA` },
+    { label: "Dispatch", value: currency(payout), detail: "Assistant payout with proofstream" }
+  ];
 
   reactorMode.textContent = `${serviceLabel} reactor`;
-  reactorSummary.textContent = `AURA split this request into ${atoms.length} task atoms with ${average}% operational confidence.`;
+  reactorHeadline.textContent = `${assistant.name} can execute in ${assistant.eta} minutes`;
+  reactorValueBadge.textContent = `${friction}h saved`;
+  reactorSummary.textContent = `AURA is turning the request into an executable operation: ${currency(total)} client total, ${currency(payout)} assistant payout, ${routeCompression}% route compression, and ${repeat}% repeat odds.`;
   matchHeat.textContent = average;
   frictionSaved.textContent = `${friction}h`;
   repeatOdds.textContent = `${repeat}%`;
+
+  reactorKpis.innerHTML = [
+    { label: "ETA", value: `${assistant.eta}m` },
+    { label: "Assistant fit", value: assistant.fit },
+    { label: "AURA fee", value: currency(fee) },
+    { label: "Route gain", value: `${routeCompression}%` }
+  ]
+    .map(
+      (kpi) => `
+        <div>
+          <span>${kpi.label}</span>
+          <strong>${kpi.value}</strong>
+        </div>
+      `
+    )
+    .join("");
+
+  opsFlow.innerHTML = dispatchSteps
+    .map(
+      (step, index) => `
+        <div class="ops-step">
+          <b>${index + 1}</b>
+          <strong>${step.label}</strong>
+          <span>${step.value}</span>
+          <small>${step.detail}</small>
+        </div>
+      `
+    )
+    .join("");
 
   intentAtoms.innerHTML = atoms
     .map(
@@ -451,6 +621,185 @@ function renderChecklists() {
       `
     )
     .join("");
+}
+
+function levelLabel(level) {
+  return {
+    reset: "Reset",
+    deep: "Deep",
+    turnover: "Turnover"
+  }[level] || "Reset";
+}
+
+function selectedCleaningRooms() {
+  return Array.from(roomChipGrid.querySelectorAll(".room-chip.is-selected")).map((button) => button.dataset.room);
+}
+
+function roomTasksFor(room, level, priority) {
+  const tasks = [...room.tasks];
+  if (level === "deep") tasks.push(...room.deepAdds);
+  if (level === "turnover") tasks.push(...room.turnoverAdds);
+  if (priority === "photo") tasks.push("Capture extra proof sweep from room entry and detail angle");
+  if (priority === "speed") tasks.unshift("Start with visible-impact surfaces before detail pass");
+  return tasks;
+}
+
+function buildCleaningPlan() {
+  const level = cleaningLevel.value;
+  const priority = cleaningPriority.value;
+  const selected = selectedCleaningRooms();
+  const rooms = cleaningRooms
+    .filter((room) => selected.includes(room.id))
+    .map((room) => {
+      const tasks = roomTasksFor(room, level, priority);
+      const multiplier = level === "deep" ? 1.35 : level === "turnover" ? 1.18 : 1;
+      const priorityMinutes = priority === "photo" ? 4 : priority === "speed" ? -3 : 0;
+      return {
+        ...room,
+        tasks,
+        estimate: Math.max(12, Math.round(room.minutes * multiplier + priorityMinutes)),
+        proofCount: room.proof + (priority === "photo" ? 2 : level === "turnover" ? 1 : 0)
+      };
+    });
+  return { level, priority, rooms };
+}
+
+function renderRoomBuilder() {
+  const defaultRooms = new Set(["kitchen", "primary-bath", "living", "entry"]);
+  roomChipGrid.innerHTML = cleaningRooms
+    .map(
+      (room) => `
+        <button class="room-chip ${defaultRooms.has(room.id) ? "is-selected" : ""}" data-room="${room.id}" type="button">
+          <strong>${room.name}</strong>
+          <span>${room.zone}</span>
+        </button>
+      `
+    )
+    .join("");
+}
+
+function renderRoomPlan() {
+  const plan = buildCleaningPlan();
+  cleanprintIntensity.textContent = levelLabel(plan.level);
+
+  if (!plan.rooms.length) {
+    roomPlan.innerHTML = `
+      <article class="room-plan-empty">
+        <strong>Select at least one room</strong>
+        <span>AURA needs rooms before it can build the Cleanprint.</span>
+      </article>
+    `;
+    cleanRoomCount.textContent = "0";
+    cleanTaskCount.textContent = "0";
+    cleanProofCount.textContent = "0";
+    cleanMinutes.textContent = "0m";
+    return;
+  }
+
+  const totalTasks = plan.rooms.reduce((sum, room) => sum + room.tasks.length, 0);
+  const totalProof = plan.rooms.reduce((sum, room) => sum + room.proofCount, 0);
+  const totalMinutes = plan.rooms.reduce((sum, room) => sum + room.estimate, 0);
+  cleanRoomCount.textContent = plan.rooms.length;
+  cleanTaskCount.textContent = totalTasks;
+  cleanProofCount.textContent = totalProof;
+  cleanMinutes.textContent = `${totalMinutes}m`;
+
+  roomPlan.innerHTML = plan.rooms
+    .map(
+      (room, roomIndex) => `
+        <article class="room-card" data-room-card="${roomIndex}">
+          <header>
+            <div>
+              <span>${room.zone}</span>
+              <h3>${room.name}</h3>
+            </div>
+            <div class="room-metrics">
+              <strong>${room.estimate}m</strong>
+              <span>${room.proofCount} proofs</span>
+            </div>
+          </header>
+          <div class="progress-track" aria-hidden="true"><span class="progress-fill"></span></div>
+          <div class="room-task-list">
+            ${room.tasks
+              .map(
+                (task, taskIndex) => `
+                  <label class="room-task">
+                    <input type="checkbox" data-room-card="${roomIndex}" data-task="${taskIndex}">
+                    <span>${task}</span>
+                  </label>
+                `
+              )
+              .join("")}
+          </div>
+        </article>
+      `
+    )
+    .join("");
+
+  taskInput.value = `Build a ${levelLabel(plan.level).toLowerCase()} Cleanprint for ${plan.rooms.map((room) => room.name).join(", ")} with ${totalTasks} tasks, ${totalProof} proof points, and a ${totalMinutes} minute estimate.`;
+  updateQuote();
+}
+
+function updateRoomProgress(roomIndex) {
+  const card = roomPlan.querySelector(`[data-room-card="${roomIndex}"]`);
+  if (!card) return;
+  const boxes = card.querySelectorAll("input[type='checkbox']");
+  const complete = Array.from(boxes).filter((box) => box.checked).length;
+  card.querySelector(".progress-fill").style.width = `${(complete / Math.max(1, boxes.length)) * 100}%`;
+}
+
+function cleaningPlanPayload() {
+  const plan = buildCleaningPlan();
+  const totalTasks = plan.rooms.reduce((sum, room) => sum + room.tasks.length, 0);
+  const totalProof = plan.rooms.reduce((sum, room) => sum + room.proofCount, 0);
+  const totalMinutes = plan.rooms.reduce((sum, room) => sum + room.estimate, 0);
+
+  return {
+    level: plan.level,
+    priority: plan.priority,
+    market: "Miami",
+    roomCount: plan.rooms.length,
+    taskCount: totalTasks,
+    proofCount: totalProof,
+    estimatedMinutes: totalMinutes,
+    rooms: plan.rooms.map((room, position) => ({
+      id: room.id,
+      name: room.name,
+      zone: room.zone,
+      position: position + 1,
+      estimatedMinutes: room.estimate,
+      proofCount: room.proofCount,
+      tasks: room.tasks.map((label, taskPosition) => ({
+        label,
+        position: taskPosition + 1,
+        requiresPhoto: /photo|proof|receipt|final|entry|mirror|before|after/i.test(label)
+      }))
+    }))
+  };
+}
+
+async function saveCleanprint() {
+  renderRoomPlan();
+  const payload = cleaningPlanPayload();
+
+  if (!payload.rooms.length) {
+    cleanprintStatus.textContent = "Select at least one room before building the Cleanprint.";
+    return;
+  }
+
+  buildCleanprint.disabled = true;
+  cleanprintStatus.textContent = "Building room map, proof stream, and assistant handoff...";
+
+  try {
+    const result = await postJson("/api/cleaning-plan", payload);
+    const modeCopy = result.mode === "database" ? "saved to Neon" : "built in demo mode";
+    cleanprintStatus.textContent = `Cleanprint ${modeCopy}: ${payload.roomCount} rooms, ${payload.taskCount} tasks, ${payload.proofCount} proof points.`;
+    bookingStatus.textContent = `Cleanprint ready: ${payload.taskCount} room tasks and ${payload.estimatedMinutes} minutes packaged for dispatch.`;
+  } catch {
+    cleanprintStatus.textContent = "Cleanprint built locally. Add DATABASE_URL to persist room plans.";
+  } finally {
+    buildCleanprint.disabled = false;
+  }
 }
 
 function updateChecklistProgress(listIndex) {
@@ -721,6 +1070,23 @@ checklistBoard.addEventListener("change", (event) => {
   updateChecklistProgress(checkbox.dataset.list);
 });
 
+roomChipGrid.addEventListener("click", (event) => {
+  const chip = event.target.closest(".room-chip");
+  if (!chip) return;
+  chip.classList.toggle("is-selected");
+  renderRoomPlan();
+});
+
+cleaningLevel.addEventListener("change", renderRoomPlan);
+cleaningPriority.addEventListener("change", renderRoomPlan);
+buildCleanprint.addEventListener("click", saveCleanprint);
+
+roomPlan.addEventListener("change", (event) => {
+  const checkbox = event.target.closest("input[type='checkbox']");
+  if (!checkbox) return;
+  updateRoomProgress(checkbox.dataset.roomCard);
+});
+
 inventoryUpload.addEventListener("change", async () => {
   const [file] = inventoryUpload.files;
   if (!file) return;
@@ -781,6 +1147,8 @@ hoursRange.addEventListener("input", () => {
 
 renderAssistants();
 renderTimeline();
+renderRoomBuilder();
+renderRoomPlan();
 renderChecklists();
 renderLifeprint();
 renderMissionControl();
