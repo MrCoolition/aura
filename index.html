@@ -28,6 +28,7 @@
           <a href="#lifeprint">Lifeprint</a>
           <a href="#inventory">Inventory</a>
           <a href="#earn">Earn</a>
+          <a href="#admin" id="adminNavLink" hidden>Admin</a>
         </nav>
         <div class="mode-switch" aria-label="Choose AURA mode">
           <button class="mode-button is-active" data-mode-button="hire" type="button">Hire</button>
@@ -45,6 +46,58 @@
           <button class="auth-action is-muted" id="logoutButton" type="button" hidden>Sign out</button>
         </div>
       </header>
+
+      <section class="auth-portal" id="authPortal" role="dialog" aria-modal="true" aria-labelledby="authPortalTitle" hidden>
+        <div class="auth-portal-panel">
+          <button class="auth-portal-close" id="authPortalClose" type="button" aria-label="Close sign in">&times;</button>
+          <div class="auth-portal-brand">
+            <div class="auth-portal-mark">
+              <img src="/assets/aura-app-icon.png" alt="AURA logo">
+              <span>AURA</span>
+            </div>
+            <div>
+              <p class="eyebrow">Private access</p>
+              <h2 id="authPortalTitle">Your AURA starts here.</h2>
+              <p id="authPortalContext">Secure profile, saved preferences, bookings, Cleanprints, inventory, and admin control.</p>
+            </div>
+            <div class="auth-portal-meter" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+          <div class="auth-portal-content">
+            <p class="eyebrow">Okta/Auth0</p>
+            <h3>One identity. Every personal operation.</h3>
+            <div class="auth-proof-list">
+              <div>
+                <b>01</b>
+                <span>
+                  <strong>Verified profile</strong>
+                  <small>Private preferences and booking history stay tied to you.</small>
+                </span>
+              </div>
+              <div>
+                <b>02</b>
+                <span>
+                  <strong>RLS boundary</strong>
+                  <small>Neon only returns rows your session is allowed to see.</small>
+                </span>
+              </div>
+              <div>
+                <b>03</b>
+                <span>
+                  <strong>Admin cockpit</strong>
+                  <small>Approved operators get platform-wide visibility after sign-in.</small>
+                </span>
+              </div>
+            </div>
+            <button class="auth-portal-continue" id="authPortalContinue" type="button">Continue securely</button>
+            <p class="auth-portal-status" id="authPortalStatus">Checking AURA access...</p>
+          </div>
+        </div>
+      </section>
 
       <main id="home">
         <section class="hero-workbench" aria-labelledby="hero-title">
@@ -389,6 +442,58 @@
               <input id="hoursRange" type="range" min="8" max="45" value="24">
               <small id="hoursOutput">24 hours at premium utilization</small>
             </div>
+          </div>
+        </section>
+
+        <section class="admin-section" id="admin" aria-labelledby="admin-title" hidden>
+          <div class="section-heading">
+            <p class="eyebrow">Admin Command</p>
+            <h2 id="admin-title">AURA control plane</h2>
+            <p>See users, demand, Cleanprints, inventory scans, and quality signals through the same RLS boundary the product uses.</p>
+          </div>
+          <div class="admin-grid">
+            <article class="admin-panel admin-totals">
+              <div class="panel-title">
+                <h3>Platform pulse</h3>
+                <span id="adminMode">RLS live</span>
+              </div>
+              <div class="admin-stat-grid" id="adminStats"></div>
+            </article>
+            <article class="admin-panel">
+              <div class="panel-title">
+                <h3>Users</h3>
+                <span id="adminUserCount">0 users</span>
+              </div>
+              <div class="admin-list" id="adminUsers"></div>
+            </article>
+            <article class="admin-panel">
+              <div class="panel-title">
+                <h3>Recent demand</h3>
+                <span id="adminRequestCount">0 requests</span>
+              </div>
+              <div class="admin-list" id="adminRequests"></div>
+            </article>
+            <article class="admin-panel">
+              <div class="panel-title">
+                <h3>Cleanprints</h3>
+                <span id="adminCleanprintCount">0 plans</span>
+              </div>
+              <div class="admin-list" id="adminCleanprints"></div>
+            </article>
+            <article class="admin-panel">
+              <div class="panel-title">
+                <h3>Inventory</h3>
+                <span id="adminInventoryCount">0 scans</span>
+              </div>
+              <div class="admin-list" id="adminInventory"></div>
+            </article>
+            <article class="admin-panel">
+              <div class="panel-title">
+                <h3>Feedback</h3>
+                <span id="adminFeedbackCount">0 events</span>
+              </div>
+              <div class="admin-list" id="adminFeedback"></div>
+            </article>
           </div>
         </section>
       </main>

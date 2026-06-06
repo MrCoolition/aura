@@ -1,5 +1,5 @@
 import { demoInventoryDetections } from "../server/demo-data.js";
-import { requireAuth, upsertAuraUser } from "../server/auth.js";
+import { requireAuth, runWithUserContext, upsertAuraUser } from "../server/auth.js";
 import { getSql, json, missingDatabasePayload, readJson } from "../server/db.js";
 
 export async function OPTIONS() {
@@ -29,41 +29,45 @@ export async function POST(request) {
 
   const auraUser = await upsertAuraUser(sql, auth.user);
 
-  const scanRows = await sql`
-    insert into inventory_image_scans (
-      client_user_id,
-      source_file_name,
-      provider,
-      status,
-      raw_result
-    )
-    values (
-      ${auraUser.id},
-      ${fileName},
-      'aura-browser-demo',
-      'processed',
-      ${JSON.stringify({ detections: detectedItems })}::jsonb
-    )
-    returning id, source_file_name, status, created_at
-  `;
-
-  for (const item of detectedItems) {
-    await sql`
-      insert into image_scan_detections (
-        scan_id,
-        item_name,
-        item_status,
-        recommended_action,
-        confidence
+  const [scanRows] = await runWithUserContext(sql, auraUser, [
+    sql`
+      insert into inventory_image_scans (
+        client_user_id,
+        source_file_name,
+        provider,
+        status,
+        raw_result
       )
       values (
-        ${scanRows[0].id},
-        ${String(item.item || "Detected item")},
-        ${String(item.status || "Review")},
-        ${String(item.action || "Review with assistant")},
-        0.82
+        ${auraUser.id},
+        ${fileName},
+        'aura-browser-demo',
+        'processed',
+        ${JSON.stringify({ detections: detectedItems })}::jsonb
       )
-    `;
+      returning id, source_file_name, status, created_at
+    `
+  ]);
+
+  for (const item of detectedItems) {
+    await runWithUserContext(sql, auraUser, [
+      sql`
+        insert into image_scan_detections (
+          scan_id,
+          item_name,
+          item_status,
+          recommended_action,
+          confidence
+        )
+        values (
+          ${scanRows[0].id},
+          ${String(item.item || "Detected item")},
+          ${String(item.status || "Review")},
+          ${String(item.action || "Review with assistant")},
+          0.82
+        )
+      `
+    ]);
   }
 
   return json({

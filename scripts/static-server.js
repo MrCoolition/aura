@@ -18,6 +18,7 @@ const mimeTypes = {
 };
 
 const apiRoutes = {
+  "/api/admin/overview": "api/admin/overview.js",
   "/api/assistants": "api/assistants.js",
   "/api/auth-config": "api/auth-config.js",
   "/api/bookings": "api/bookings.js",

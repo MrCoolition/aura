@@ -1,24 +1,30 @@
 import { demoMemoryNodes } from "../server/demo-data.js";
-import { requireAuth, upsertAuraUser } from "../server/auth.js";
+import { requireAuth, runWithUserContext, upsertAuraUser } from "../server/auth.js";
 import { getSql, json, missingDatabasePayload, readJson } from "../server/db.js";
 
 export async function OPTIONS() {
   return json({ ok: true });
 }
 
-export async function GET() {
+export async function GET(request) {
+  const auth = await requireAuth(request);
+  if (auth.response) return auth.response;
+
   const sql = await getSql();
 
   if (!sql) {
     return json(missingDatabasePayload("memory_nodes", demoMemoryNodes));
   }
 
-  const nodes = await sql`
-    select label, memory_value as value, strength
-    from aura_memory_nodes
-    order by strength desc, updated_at desc
-    limit 20
-  `;
+  const auraUser = await upsertAuraUser(sql, auth.user);
+  const [nodes] = await runWithUserContext(sql, auraUser, [
+    sql`
+      select label, memory_value as value, strength
+      from aura_memory_nodes
+      order by strength desc, updated_at desc
+      limit 20
+    `
+  ]);
 
   return json({ ok: true, mode: "database", data: nodes });
 }
@@ -43,11 +49,13 @@ export async function POST(request) {
 
   const auraUser = await upsertAuraUser(sql, auth.user);
 
-  const rows = await sql`
-    insert into aura_memory_nodes (client_user_id, label, memory_value, strength, source)
-    values (${auraUser.id}, ${label}, ${value}, ${strength}, 'aura-web')
-    returning id, label, memory_value as value, strength, source, updated_at
-  `;
+  const [rows] = await runWithUserContext(sql, auraUser, [
+    sql`
+      insert into aura_memory_nodes (client_user_id, label, memory_value, strength, source)
+      values (${auraUser.id}, ${label}, ${value}, ${strength}, 'aura-web')
+      returning id, label, memory_value as value, strength, source, updated_at
+    `
+  ]);
 
   return json({ ok: true, mode: "database", data: rows[0] });
 }

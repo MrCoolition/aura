@@ -79,6 +79,8 @@ Set these environment variables in Vercel:
 - `AUTH0_AUDIENCE`
 - `AUTH0_SCOPE`
 - `AUTH0_CACHE_LOCATION`
+- `AURA_ADMIN_EMAILS`
+- `AURA_ADMIN_SUBJECTS`
 
 The app is intentionally zero-build for fast deployment. `index.html`, `styles.css`, and `app.js` ship the client app. Files in `api/` are Vercel Functions and use Neon only when `DATABASE_URL` exists.
 
@@ -87,6 +89,20 @@ The app is intentionally zero-build for fast deployment. `index.html`, `styles.c
 AURA uses Auth0 SPA login with Authorization Code + PKCE in the browser. API writes call Vercel Functions with a bearer token. The functions validate Auth0 JWTs against the tenant JWKS when `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, and `AUTH0_AUDIENCE` are configured.
 
 Signed-in users are upserted into `aura_users` by `auth_subject`, and their customization defaults are stored in `user_preferences`.
+
+## Database Security
+
+`database/schema.sql` enables and forces Postgres row-level security on the tables that carry user data, marketplace work, cleaning plans, inventory scans, feedback, AURA memory, assistant missions, and payouts. Every API function that writes or reads private data starts a Neon transaction with these session settings:
+
+- `app.current_user_id`
+- `app.current_role`
+- `app.auth_subject`
+
+Policies use that context to keep clients in their own rows, assistants in rows connected to their profile, and admins/operators across the whole platform.
+
+Use a Neon application database role for production that does **not** have `BYPASSRLS`. After applying `database/schema.sql`, the Admin control plane reports how many protected tables have RLS enabled and forced.
+
+Admin bootstrap is controlled by `AURA_ADMIN_EMAILS`, `AURA_ADMIN_SUBJECTS`, or Auth0 role/permission claims containing `admin`, `operator`, `aura:admin`, `admin:all`, or `read:admin`.
 
 ## Profit Loops
 

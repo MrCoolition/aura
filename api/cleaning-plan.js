@@ -1,5 +1,5 @@
 import { demoCleaningRooms } from "../server/demo-data.js";
-import { requireAuth, upsertAuraUser } from "../server/auth.js";
+import { requireAuth, runWithUserContext, upsertAuraUser } from "../server/auth.js";
 import { getSql, json, missingDatabasePayload, readJson } from "../server/db.js";
 
 export async function OPTIONS() {
@@ -79,68 +79,74 @@ export async function POST(request) {
   }
 
   const auraUser = await upsertAuraUser(sql, auth.user);
-  const planRows = await sql`
-    insert into cleaning_plans (
-      client_user_id,
-      level,
-      priority,
-      room_count,
-      task_count,
-      proof_count,
-      estimated_minutes,
-      status,
-      payload
-    )
-    values (
-      ${auraUser.id},
-      ${level},
-      ${priority},
-      ${rooms.length},
-      ${taskCount},
-      ${proofCount},
-      ${estimatedMinutes},
-      'ready',
-      ${JSON.stringify(planPayload)}::jsonb
-    )
-    returning id, level, priority, room_count, task_count, proof_count, estimated_minutes, status, created_at
-  `;
-
-  for (const room of rooms) {
-    const roomRows = await sql`
-      insert into cleaning_plan_rooms (
-        cleaning_plan_id,
-        room_name,
-        room_zone,
-        estimated_minutes,
+  const [planRows] = await runWithUserContext(sql, auraUser, [
+    sql`
+      insert into cleaning_plans (
+        client_user_id,
+        level,
+        priority,
+        room_count,
+        task_count,
         proof_count,
-        position
+        estimated_minutes,
+        status,
+        payload
       )
       values (
-        ${planRows[0].id},
-        ${room.name},
-        ${room.zone},
-        ${room.estimatedMinutes},
-        ${room.proofCount},
-        ${room.position}
+        ${auraUser.id},
+        ${level},
+        ${priority},
+        ${rooms.length},
+        ${taskCount},
+        ${proofCount},
+        ${estimatedMinutes},
+        'ready',
+        ${JSON.stringify(planPayload)}::jsonb
       )
-      returning id
-    `;
+      returning id, level, priority, room_count, task_count, proof_count, estimated_minutes, status, created_at
+    `
+  ]);
 
-    for (const task of room.tasks) {
-      await sql`
-        insert into cleaning_plan_tasks (
-          cleaning_plan_room_id,
-          label,
-          position,
-          requires_photo
+  for (const room of rooms) {
+    const [roomRows] = await runWithUserContext(sql, auraUser, [
+      sql`
+        insert into cleaning_plan_rooms (
+          cleaning_plan_id,
+          room_name,
+          room_zone,
+          estimated_minutes,
+          proof_count,
+          position
         )
         values (
-          ${roomRows[0].id},
-          ${task.label},
-          ${task.position},
-          ${task.requiresPhoto}
+          ${planRows[0].id},
+          ${room.name},
+          ${room.zone},
+          ${room.estimatedMinutes},
+          ${room.proofCount},
+          ${room.position}
         )
-      `;
+        returning id
+      `
+    ]);
+
+    for (const task of room.tasks) {
+      await runWithUserContext(sql, auraUser, [
+        sql`
+          insert into cleaning_plan_tasks (
+            cleaning_plan_room_id,
+            label,
+            position,
+            requires_photo
+          )
+          values (
+            ${roomRows[0].id},
+            ${task.label},
+            ${task.position},
+            ${task.requiresPhoto}
+          )
+        `
+      ]);
     }
   }
 

@@ -1,4 +1,4 @@
-import { requireAuth, upsertAuraUser } from "../server/auth.js";
+import { requireAuth, runWithUserContext, upsertAuraUser } from "../server/auth.js";
 import { getSql, json, missingDatabasePayload, readJson } from "../server/db.js";
 
 export async function OPTIONS() {
@@ -44,64 +44,68 @@ export async function POST(request) {
 
   const auraUser = await upsertAuraUser(sql, auth.user);
 
-  const rows = await sql`
-    insert into service_requests (
-      client_name,
-      client_email,
-      client_user_id,
-      service_category,
-      task_summary,
-      market,
-      urgency,
-      budget_cents,
-      ai_plan
-    )
-    values (
-      ${auraUser.full_name || "AURA Web Client"},
-      ${auraUser.email || "demo@aura.local"},
-      ${auraUser.id},
-      ${serviceCategory},
-      ${taskSummary},
-      ${market},
-      ${urgency},
-      ${budgetCents},
-      ${JSON.stringify({
-        platformFeeCents,
-        assistantPayoutCents,
-        matchScore,
-        source: "web-console"
-      })}::jsonb
-    )
-    returning id, status, service_category, task_summary, budget_cents, created_at
-  `;
-
-  await sql`
-    insert into match_runs (
-      service_request_id,
-      service_category,
-      match_score,
-      client_total_cents,
-      platform_fee_cents,
-      assistant_payout_cents,
-      task_atoms,
-      scorecard
-    )
-    values (
-      ${rows[0].id},
-      ${serviceCategory},
-      ${matchScore},
-      ${budgetCents},
-      ${platformFeeCents},
-      ${assistantPayoutCents},
-      ${JSON.stringify(body.taskAtoms || [])}::jsonb,
-      ${JSON.stringify({
-        assistantId: body.assistantId || null,
-        urgency,
+  const [rows] = await runWithUserContext(sql, auraUser, [
+    sql`
+      insert into service_requests (
+        client_name,
+        client_email,
+        client_user_id,
+        service_category,
+        task_summary,
         market,
-        source: "intent-reactor"
-      })}::jsonb
-    )
-  `;
+        urgency,
+        budget_cents,
+        ai_plan
+      )
+      values (
+        ${auraUser.full_name || "AURA Web Client"},
+        ${auraUser.email || "demo@aura.local"},
+        ${auraUser.id},
+        ${serviceCategory},
+        ${taskSummary},
+        ${market},
+        ${urgency},
+        ${budgetCents},
+        ${JSON.stringify({
+          platformFeeCents,
+          assistantPayoutCents,
+          matchScore,
+          source: "web-console"
+        })}::jsonb
+      )
+      returning id, status, service_category, task_summary, budget_cents, created_at
+    `
+  ]);
+
+  await runWithUserContext(sql, auraUser, [
+    sql`
+      insert into match_runs (
+        service_request_id,
+        service_category,
+        match_score,
+        client_total_cents,
+        platform_fee_cents,
+        assistant_payout_cents,
+        task_atoms,
+        scorecard
+      )
+      values (
+        ${rows[0].id},
+        ${serviceCategory},
+        ${matchScore},
+        ${budgetCents},
+        ${platformFeeCents},
+        ${assistantPayoutCents},
+        ${JSON.stringify(body.taskAtoms || [])}::jsonb,
+        ${JSON.stringify({
+          assistantId: body.assistantId || null,
+          urgency,
+          market,
+          source: "intent-reactor"
+        })}::jsonb
+      )
+    `
+  ]);
 
   return json({
     ok: true,

@@ -1,4 +1,4 @@
-import { requireAuth, upsertAuraUser } from "../server/auth.js";
+import { requireAuth, runWithUserContext, upsertAuraUser } from "../server/auth.js";
 import { getSql, json, missingDatabasePayload, readJson } from "../server/db.js";
 
 const defaultPreferences = {
@@ -33,12 +33,14 @@ export async function GET(request) {
   }
 
   const auraUser = await upsertAuraUser(sql, auth.user);
-  const rows = await sql`
-    select preferences
-    from user_preferences
-    where user_id = ${auraUser.id} and namespace = 'aura'
-    limit 1
-  `;
+  const [rows] = await runWithUserContext(sql, auraUser, [
+    sql`
+      select preferences
+      from user_preferences
+      where user_id = ${auraUser.id} and namespace = 'aura'
+      limit 1
+    `
+  ]);
 
   return json({
     ok: true,
@@ -66,22 +68,24 @@ export async function POST(request) {
   }
 
   const auraUser = await upsertAuraUser(sql, auth.user);
-  const rows = await sql`
-    insert into user_preferences (
-      user_id,
-      namespace,
-      preferences
-    )
-    values (
-      ${auraUser.id},
-      'aura',
-      ${JSON.stringify(preferences)}::jsonb
-    )
-    on conflict (user_id, namespace) do update set
-      preferences = excluded.preferences,
-      updated_at = now()
-    returning id, namespace, preferences, updated_at
-  `;
+  const [rows] = await runWithUserContext(sql, auraUser, [
+    sql`
+      insert into user_preferences (
+        user_id,
+        namespace,
+        preferences
+      )
+      values (
+        ${auraUser.id},
+        'aura',
+        ${JSON.stringify(preferences)}::jsonb
+      )
+      on conflict (user_id, namespace) do update set
+        preferences = excluded.preferences,
+        updated_at = now()
+      returning id, namespace, preferences, updated_at
+    `
+  ]);
 
   return json({ ok: true, mode: "database", data: { user: auraUser, preferences: rows[0].preferences } });
 }

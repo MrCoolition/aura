@@ -1,4 +1,4 @@
-import { requireAuth, upsertAuraUser } from "../server/auth.js";
+import { requireAuth, runWithUserContext, upsertAuraUser } from "../server/auth.js";
 import { getSql, json, missingDatabasePayload, readJson } from "../server/db.js";
 
 export async function OPTIONS() {
@@ -26,25 +26,27 @@ export async function POST(request) {
 
   const auraUser = await upsertAuraUser(sql, auth.user);
 
-  const rows = await sql`
-    insert into feedback_events (
-      client_user_id,
-      rating,
-      tip_cents,
-      client_note,
-      sentiment,
-      coaching_notes
-    )
-    values (
-      ${auraUser.id},
-      ${rating},
-      ${tipCents},
-      ${note},
-      ${sentiment},
-      ${coachingNotes}
-    )
-    returning id, rating, tip_cents, sentiment, created_at
-  `;
+  const [rows] = await runWithUserContext(sql, auraUser, [
+    sql`
+      insert into feedback_events (
+        client_user_id,
+        rating,
+        tip_cents,
+        client_note,
+        sentiment,
+        coaching_notes
+      )
+      values (
+        ${auraUser.id},
+        ${rating},
+        ${tipCents},
+        ${note},
+        ${sentiment},
+        ${coachingNotes}
+      )
+      returning id, rating, tip_cents, sentiment, created_at
+    `
+  ]);
 
   return json({
     ok: true,

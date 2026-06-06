@@ -40,6 +40,8 @@ AUTH0_CLIENT_ID
 AUTH0_AUDIENCE
 AUTH0_SCOPE
 AUTH0_CACHE_LOCATION
+AURA_ADMIN_EMAILS
+AURA_ADMIN_SUBJECTS
 ```
 
 The root `index.html` fixes the previous Vercel 404.
@@ -67,3 +69,23 @@ http://localhost:4173, https://aura-omega-rosy.vercel.app
 ```
 
 Create an Auth0 API and use its Identifier as `AUTH0_AUDIENCE`. Without an audience, the UI can sign in but API writes stay in demo mode instead of JWT-protected mode.
+
+## Admin + RLS
+
+Run the updated `database/schema.sql` against Neon to activate Postgres row-level security, then run `database/seed.sql` if you want demo supply. The seed script now sets an admin session context before inserting sample rows.
+
+Use a Neon application role for `DATABASE_URL` that does **not** have `BYPASSRLS`. The schema enables and forces RLS across user, booking, cleaning, inventory, feedback, memory, mission, and payout tables.
+
+Bootstrap the first admin with either:
+
+```bash
+AURA_ADMIN_EMAILS="you@example.com"
+```
+
+or the stable Auth0 subject:
+
+```bash
+AURA_ADMIN_SUBJECTS="auth0|xxxxxxxx"
+```
+
+AURA also honors Auth0 role/permission claims containing `admin`, `operator`, `aura:admin`, `admin:all`, or `read:admin`. Admins see the hidden **Admin** control plane after sign-in.

@@ -31,6 +31,59 @@ function authSettings() {
   };
 }
 
+function envList(name) {
+  return String(process.env[name] || "")
+    .split(",")
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function arrayClaim(value) {
+  if (!value) return [];
+  return Array.isArray(value) ? value.map((item) => String(item).toLowerCase()) : [String(value).toLowerCase()];
+}
+
+function authRoles(authUser) {
+  return [
+    ...arrayClaim(authUser.roles),
+    ...arrayClaim(authUser.permissions),
+    ...arrayClaim(authUser.groups),
+    ...arrayClaim(authUser["https://aura.app/roles"]),
+    ...arrayClaim(authUser["https://aura.app/permissions"]),
+    ...arrayClaim(authUser["https://aura.app/groups"]),
+    ...arrayClaim(authUser["https://aura-omega-rosy.vercel.app/roles"]),
+    ...arrayClaim(authUser["https://aura-omega-rosy.vercel.app/permissions"]),
+    ...arrayClaim(authUser["https://aura-omega-rosy.vercel.app/groups"])
+  ];
+}
+
+export function roleForAuthUser(authUser) {
+  const email = String(authUser.email || "").toLowerCase();
+  const emailVerified = authUser.email_verified !== false;
+  const subject = String(authUser.sub || "").toLowerCase();
+  const roles = authRoles(authUser);
+  const adminEmails = envList("AURA_ADMIN_EMAILS");
+  const adminSubjects = envList("AURA_ADMIN_SUBJECTS");
+
+  if (
+    (emailVerified && adminEmails.includes(email)) ||
+    adminSubjects.includes(subject) ||
+    roles.some((role) => ["admin", "operator", "aura-admin", "aura:admin", "admin:all", "read:admin"].includes(role))
+  ) {
+    return "admin";
+  }
+
+  if (roles.some((role) => ["assistant", "provider", "aura:assistant"].includes(role))) {
+    return "assistant";
+  }
+
+  return "client";
+}
+
+export function isAdminUser(auraUser) {
+  return ["admin", "operator"].includes(String(auraUser?.role || ""));
+}
+
 export function publicAuthConfig() {
   const settings = authSettings();
 
@@ -170,60 +223,83 @@ export async function requireAuth(request) {
   }
 }
 
-export async function upsertAuraUser(sql, authUser, role = "client") {
+export async function upsertAuraUser(sql, authUser, role = roleForAuthUser(authUser)) {
   const fallbackEmail = `${String(authUser.sub || "user").replace(/[^a-z0-9]+/gi, "_")}@auth.aura.local`;
   const email = String(authUser.email || fallbackEmail).toLowerCase();
   const fullName = String(authUser.name || authUser.nickname || email);
   const picture = authUser.picture ? String(authUser.picture) : null;
   const subject = String(authUser.sub || "");
 
-  const existing = await sql`
-    select id, role, full_name, email, auth_subject
-    from aura_users
-    where auth_subject = ${subject}
-    limit 1
-  `;
-
-  if (existing.length) {
-    const rows = await sql`
+  const rows = await sql`
+    with _ctx as (
+      select
+        set_config('app.auth_subject', ${subject}, true),
+        set_config('app.auth_email', ${email}, true),
+        set_config('app.current_role', ${role}, true)
+    ),
+    existing as (
+      select id
+      from aura_users, _ctx
+      where auth_subject = ${subject}
+        or (auth_subject is null and lower(email) = ${email})
+      order by created_at asc
+      limit 1
+    ),
+    updated as (
       update aura_users
       set
+        role = case
+          when aura_users.role in ('admin', 'operator') then aura_users.role
+          else ${role}::aura_user_role
+        end,
         full_name = ${fullName},
         email = ${email},
         avatar_url = ${picture},
+        auth_provider = 'auth0',
+        auth_subject = coalesce(aura_users.auth_subject, ${subject}),
         updated_at = now()
-      where id = ${existing[0].id}
+      where id in (select id from existing)
       returning id, role, full_name, email, auth_subject
-    `;
-
-    return rows[0];
-  }
-
-  const rows = await sql`
-    insert into aura_users (
-      role,
-      full_name,
-      email,
-      avatar_url,
-      auth_provider,
-      auth_subject
+    ),
+    inserted as (
+      insert into aura_users (
+        role,
+        full_name,
+        email,
+        avatar_url,
+        auth_provider,
+        auth_subject
+      )
+      select
+        ${role}::aura_user_role,
+        ${fullName},
+        ${email},
+        ${picture},
+        'auth0',
+        ${subject}
+      from _ctx
+      where not exists (select 1 from updated)
+      returning id, role, full_name, email, auth_subject
     )
-    values (
-      ${role},
-      ${fullName},
-      ${email},
-      ${picture},
-      'auth0',
-      ${subject}
-    )
-    on conflict (email) do update set
-      full_name = excluded.full_name,
-      avatar_url = excluded.avatar_url,
-      auth_provider = excluded.auth_provider,
-      auth_subject = coalesce(aura_users.auth_subject, excluded.auth_subject),
-      updated_at = now()
-    returning id, role, full_name, email, auth_subject
+    select id, role, full_name, email, auth_subject from updated
+    union all
+    select id, role, full_name, email, auth_subject from inserted
+    limit 1
   `;
 
   return rows[0];
+}
+
+export async function runWithUserContext(sql, auraUser, queriesOrFactory) {
+  const queries = typeof queriesOrFactory === "function" ? queriesOrFactory(sql) : queriesOrFactory;
+  const queryList = Array.isArray(queries) ? queries : [queries];
+  const results = await sql.transaction([
+    sql`select set_config('app.current_user_id', ${auraUser.id}, true)`,
+    sql`select set_config('app.current_role', ${auraUser.role}, true)`,
+    sql`select set_config('app.auth_subject', ${auraUser.auth_subject || ""}, true)`,
+    sql`select set_config('app.auth_email', ${auraUser.email || ""}, true)`,
+    ...queryList
+  ]);
+
+  return results.slice(4);
 }

@@ -1,3 +1,5 @@
+select set_config('app.current_role', 'admin', false);
+
 insert into service_categories (slug, name, description, base_price_cents)
 values
   ('home', 'Home reset', 'Premium cleaning, staging, restock, and guest prep.', 14000),

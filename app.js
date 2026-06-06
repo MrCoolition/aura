@@ -373,12 +373,31 @@ const routeLift = document.querySelector("#routeLift");
 const proofScore = document.querySelector("#proofScore");
 const loginButton = document.querySelector("#loginButton");
 const logoutButton = document.querySelector("#logoutButton");
+const authPortal = document.querySelector("#authPortal");
+const authPortalClose = document.querySelector("#authPortalClose");
+const authPortalContinue = document.querySelector("#authPortalContinue");
+const authPortalContext = document.querySelector("#authPortalContext");
+const authPortalStatus = document.querySelector("#authPortalStatus");
 const authUser = document.querySelector("#authUser");
 const authAvatar = document.querySelector("#authAvatar");
 const authName = document.querySelector("#authName");
 const authEmail = document.querySelector("#authEmail");
 const authStatus = document.querySelector("#authStatus");
 const authGreeting = document.querySelector("#authGreeting");
+const adminNavLink = document.querySelector("#adminNavLink");
+const adminSection = document.querySelector("#admin");
+const adminMode = document.querySelector("#adminMode");
+const adminStats = document.querySelector("#adminStats");
+const adminUsers = document.querySelector("#adminUsers");
+const adminRequests = document.querySelector("#adminRequests");
+const adminCleanprints = document.querySelector("#adminCleanprints");
+const adminInventory = document.querySelector("#adminInventory");
+const adminFeedback = document.querySelector("#adminFeedback");
+const adminUserCount = document.querySelector("#adminUserCount");
+const adminRequestCount = document.querySelector("#adminRequestCount");
+const adminCleanprintCount = document.querySelector("#adminCleanprintCount");
+const adminInventoryCount = document.querySelector("#adminInventoryCount");
+const adminFeedbackCount = document.querySelector("#adminFeedbackCount");
 
 let auth0Client = null;
 let authConfig = null;
@@ -388,9 +407,11 @@ let authState = {
   apiProtectionEnabled: false,
   authenticated: false,
   user: null,
+  role: "client",
   token: ""
 };
 let preferenceSaveTimer = null;
+let pendingAuthContext = "Secure profile, saved preferences, bookings, Cleanprints, inventory, and admin control.";
 
 function currency(value) {
   return new Intl.NumberFormat("en-US", {
@@ -1033,23 +1054,66 @@ function authRedirectUri() {
   return window.location.origin;
 }
 
+function renderAuthPortalState() {
+  if (!authPortalStatus || !authPortalContinue) return;
+
+  authPortalContinue.disabled = !authState.enabled;
+
+  if (!authState.enabled) {
+    authPortalStatus.textContent = "Auth0 is not connected in this environment yet.";
+    authPortalContinue.textContent = "Auth0 not connected";
+    return;
+  }
+
+  authPortalContinue.textContent = "Continue securely";
+
+  if (!authState.apiProtectionEnabled) {
+    authPortalStatus.textContent = "Login is connected. Add AUTH0_AUDIENCE to protect API writes.";
+    return;
+  }
+
+  authPortalStatus.textContent = "Auth0 connected. Neon RLS context activates after sign-in.";
+}
+
+function openAuthPortal(actionLabel = "") {
+  if (!authPortal) return;
+  pendingAuthContext = actionLabel
+    ? `${actionLabel} needs your private AURA profile.`
+    : "Secure profile, saved preferences, bookings, Cleanprints, inventory, and admin control.";
+  if (authPortalContext) authPortalContext.textContent = pendingAuthContext;
+  renderAuthPortalState();
+  authPortal.hidden = false;
+  document.body.classList.add("auth-portal-open");
+  window.setTimeout(() => authPortalContinue?.focus(), 0);
+}
+
+function closeAuthPortal() {
+  if (!authPortal) return;
+  authPortal.hidden = true;
+  document.body.classList.remove("auth-portal-open");
+}
+
 function renderAuthState() {
   loginButton.hidden = authState.authenticated;
   logoutButton.hidden = !authState.authenticated;
   authUser.hidden = !authState.authenticated;
 
   if (!authState.enabled) {
-    loginButton.disabled = true;
-    loginButton.textContent = "Auth0 off";
+    loginButton.disabled = false;
+    loginButton.textContent = "Sign in";
     authStatus.textContent = "Demo profile";
     authGreeting.textContent = "Add Auth0 env vars to unlock secure user profiles.";
+    renderAuthPortalState();
     return;
   }
 
   loginButton.disabled = false;
   loginButton.textContent = "Sign in";
+  renderAuthPortalState();
 
   if (!authState.authenticated || !authState.user) {
+    authState.role = "client";
+    renderAdminAccess(false);
     authStatus.textContent = authState.apiProtectionEnabled ? "Secure ready" : "Audience needed";
     authGreeting.textContent = authState.apiProtectionEnabled
       ? "Sign in to make AURA yours."
@@ -1062,8 +1126,15 @@ function renderAuthState() {
   authName.textContent = displayName;
   authEmail.textContent = email;
   authAvatar.src = authState.user.picture || "/assets/aura-app-icon.png";
-  authStatus.textContent = "Private profile";
+  authStatus.textContent = authState.role === "admin" ? "Admin profile" : "Private profile";
   authGreeting.textContent = `${displayName.split(" ")[0] || "Your"} AURA defaults are syncing.`;
+  renderAdminAccess(authState.role === "admin");
+  closeAuthPortal();
+}
+
+function renderAdminAccess(enabled) {
+  adminNavLink.hidden = !enabled;
+  adminSection.hidden = !enabled;
 }
 
 function preferenceSnapshot() {
@@ -1146,13 +1217,129 @@ async function loadProfilePreferences() {
 
   try {
     const result = await getJson("/api/profile");
+    authState.role = result.data?.user?.role || "client";
+    renderAuthState();
     applyProfilePreferences(result.data?.preferences);
+    if (authState.role === "admin") {
+      await loadAdminOverview();
+    }
   } catch {
     authStatus.textContent = "Profile local";
   }
 }
 
-async function login() {
+function formatDate(value) {
+  if (!value) return "Just now";
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(
+    new Date(value)
+  );
+}
+
+function adminRows(items, renderRow) {
+  if (!items?.length) return '<p class="admin-empty">No rows yet.</p>';
+  return items.map(renderRow).join("");
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (character) =>
+    ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    })[character]
+  );
+}
+
+function renderAdminOverview(data) {
+  const totals = data.totals || {};
+  const security = data.security || {};
+  adminMode.textContent = data.user?.role === "admin" ? "Admin live" : "RLS live";
+  adminStats.innerHTML = [
+    ["Users", totals.users || 0],
+    ["Requests", totals.service_requests || 0],
+    ["Cleanprints", totals.cleanprints || 0],
+    ["Inventory scans", totals.inventory_scans || 0],
+    ["Feedback", totals.feedback_events || 0],
+    ["RLS forced", `${security.rls_forced || 0}/${security.protected_tables || 0}`]
+  ]
+    .map(([label, value]) => `<div class="admin-stat"><strong>${value}</strong><span>${label}</span></div>`)
+    .join("");
+
+  adminUserCount.textContent = `${data.users?.length || 0} shown`;
+  adminRequestCount.textContent = `${data.serviceRequests?.length || 0} shown`;
+  adminCleanprintCount.textContent = `${data.cleanprints?.length || 0} shown`;
+  adminInventoryCount.textContent = `${data.inventoryScans?.length || 0} shown`;
+  adminFeedbackCount.textContent = `${data.feedback?.length || 0} shown`;
+
+  adminUsers.innerHTML = adminRows(
+    data.users,
+    (user) => `
+      <article class="admin-row">
+        <header><strong>${escapeHtml(user.full_name || "Unnamed user")}</strong><b>${escapeHtml(user.role)}</b></header>
+        <span>${escapeHtml(user.email || user.auth_subject || "No email")}</span>
+        <span>${formatDate(user.created_at)}</span>
+      </article>
+    `
+  );
+
+  adminRequests.innerHTML = adminRows(
+    data.serviceRequests,
+    (request) => `
+      <article class="admin-row">
+        <header><strong>${escapeHtml(request.service_category || "request")}</strong><b>${escapeHtml(request.status)}</b></header>
+        <span>${escapeHtml(request.task_summary || "No summary")}</span>
+        <span>${currency((request.budget_cents || 0) / 100)} / ${formatDate(request.created_at)}</span>
+      </article>
+    `
+  );
+
+  adminCleanprints.innerHTML = adminRows(
+    data.cleanprints,
+    (plan) => `
+      <article class="admin-row">
+        <header><strong>${escapeHtml(plan.level)} / ${escapeHtml(plan.priority)}</strong><b>${escapeHtml(plan.status)}</b></header>
+        <span>${plan.room_count} rooms / ${plan.task_count} tasks / ${plan.proof_count} proofs</span>
+        <span>${plan.estimated_minutes}m / ${formatDate(plan.created_at)}</span>
+      </article>
+    `
+  );
+
+  adminInventory.innerHTML = adminRows(
+    data.inventoryScans,
+    (scan) => `
+      <article class="admin-row">
+        <header><strong>${escapeHtml(scan.source_file_name || "Inventory scan")}</strong><b>${escapeHtml(scan.status)}</b></header>
+        <span>${escapeHtml(scan.provider)}</span>
+        <span>${formatDate(scan.created_at)}</span>
+      </article>
+    `
+  );
+
+  adminFeedback.innerHTML = adminRows(
+    data.feedback,
+    (event) => `
+      <article class="admin-row">
+        <header><strong>${escapeHtml(event.rating)} stars</strong><b>${escapeHtml(event.sentiment)}</b></header>
+        <span>${currency((event.tip_cents || 0) / 100)} tip</span>
+        <span>${formatDate(event.created_at)}</span>
+      </article>
+    `
+  );
+}
+
+async function loadAdminOverview() {
+  try {
+    const result = await getJson("/api/admin/overview");
+    renderAdminOverview(result.data);
+  } catch {
+    adminMode.textContent = "Admin blocked";
+    adminStats.innerHTML = '<p class="admin-empty">Admin access requires an Auth0 admin role or AURA_ADMIN_EMAILS.</p>';
+  }
+}
+
+async function continueAuth0Login() {
   if (!auth0Client || !authConfig?.enabled) return;
   await auth0Client.loginWithRedirect({
     authorizationParams: {
@@ -1164,6 +1351,10 @@ async function login() {
       returnTo: `${window.location.pathname}${window.location.hash || ""}`
     }
   });
+}
+
+function login() {
+  openAuthPortal();
 }
 
 async function logout() {
@@ -1178,8 +1369,8 @@ async function logout() {
 async function ensureSignedIn(actionLabel) {
   if (!authState.enabled) return true;
   if (authState.authenticated) return true;
-  bookingStatus.textContent = `${actionLabel} needs a secure AURA profile first. Redirecting to Auth0...`;
-  await login();
+  bookingStatus.textContent = `${actionLabel} needs a secure AURA profile first.`;
+  openAuthPortal(actionLabel);
   return false;
 }
 
@@ -1267,6 +1458,14 @@ timeSelect.addEventListener("change", () => {
 
 loginButton.addEventListener("click", login);
 logoutButton.addEventListener("click", logout);
+authPortalContinue.addEventListener("click", continueAuth0Login);
+authPortalClose.addEventListener("click", closeAuthPortal);
+authPortal.addEventListener("click", (event) => {
+  if (event.target === authPortal) closeAuthPortal();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !authPortal.hidden) closeAuthPortal();
+});
 
 document.querySelector("#jumpToBooking").addEventListener("click", () => {
   document.querySelector("#marketplace").scrollIntoView({ behavior: "smooth" });

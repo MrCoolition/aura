@@ -363,7 +363,8 @@ create index if not exists idx_memory_nodes_client_strength on aura_memory_nodes
 create index if not exists idx_autopilot_loops_client_status on autopilot_loops (client_user_id, status, readiness desc);
 create index if not exists idx_assistant_missions_market_status on assistant_missions (market, status, trust_score desc);
 
-create or replace view assistant_marketplace_view as
+create or replace view assistant_marketplace_view
+with (security_invoker = true) as
 select
   ap.id,
   ap.display_name,
@@ -377,3 +378,432 @@ select
   ap.ai_tags,
   ap.acceptance_rate
 from assistant_profiles ap;
+
+create or replace function aura_current_user_id()
+returns uuid
+language sql
+stable
+as $$
+  select nullif(current_setting('app.current_user_id', true), '')::uuid;
+$$;
+
+create or replace function aura_current_role()
+returns text
+language sql
+stable
+as $$
+  select coalesce(nullif(current_setting('app.current_role', true), ''), 'anonymous');
+$$;
+
+create or replace function aura_current_auth_subject()
+returns text
+language sql
+stable
+as $$
+  select nullif(current_setting('app.auth_subject', true), '');
+$$;
+
+create or replace function aura_current_auth_email()
+returns text
+language sql
+stable
+as $$
+  select lower(coalesce(nullif(current_setting('app.auth_email', true), ''), ''));
+$$;
+
+create or replace function aura_is_admin()
+returns boolean
+language sql
+stable
+as $$
+  select aura_current_role() in ('admin', 'operator');
+$$;
+
+alter table aura_users enable row level security;
+alter table aura_users force row level security;
+drop policy if exists aura_users_select on aura_users;
+create policy aura_users_select on aura_users
+  for select using (
+    aura_is_admin()
+    or id = aura_current_user_id()
+    or auth_subject = aura_current_auth_subject()
+    or lower(email) = aura_current_auth_email()
+  );
+drop policy if exists aura_users_insert on aura_users;
+create policy aura_users_insert on aura_users
+  for insert with check (
+    aura_is_admin()
+    or auth_subject = aura_current_auth_subject()
+    or lower(email) = aura_current_auth_email()
+  );
+drop policy if exists aura_users_update on aura_users;
+create policy aura_users_update on aura_users
+  for update using (
+    aura_is_admin()
+    or id = aura_current_user_id()
+    or auth_subject = aura_current_auth_subject()
+    or lower(email) = aura_current_auth_email()
+  )
+  with check (
+    aura_is_admin()
+    or id = aura_current_user_id()
+    or auth_subject = aura_current_auth_subject()
+    or lower(email) = aura_current_auth_email()
+  );
+
+alter table user_preferences enable row level security;
+alter table user_preferences force row level security;
+drop policy if exists user_preferences_owner on user_preferences;
+create policy user_preferences_owner on user_preferences
+  for all using (aura_is_admin() or user_id = aura_current_user_id())
+  with check (aura_is_admin() or user_id = aura_current_user_id());
+
+alter table client_profiles enable row level security;
+alter table client_profiles force row level security;
+drop policy if exists client_profiles_owner on client_profiles;
+create policy client_profiles_owner on client_profiles
+  for all using (aura_is_admin() or user_id = aura_current_user_id())
+  with check (aura_is_admin() or user_id = aura_current_user_id());
+
+alter table assistant_profiles enable row level security;
+alter table assistant_profiles force row level security;
+drop policy if exists assistant_profiles_access on assistant_profiles;
+create policy assistant_profiles_access on assistant_profiles
+  for select using (status = 'active' or aura_is_admin() or user_id = aura_current_user_id());
+drop policy if exists assistant_profiles_owner_write on assistant_profiles;
+create policy assistant_profiles_owner_write on assistant_profiles
+  for all using (aura_is_admin() or user_id = aura_current_user_id())
+  with check (aura_is_admin() or user_id = aura_current_user_id());
+
+alter table assistant_services enable row level security;
+alter table assistant_services force row level security;
+drop policy if exists assistant_services_access on assistant_services;
+create policy assistant_services_access on assistant_services
+  for all using (
+    aura_is_admin()
+    or exists (
+      select 1 from assistant_profiles ap
+      where ap.id = assistant_services.assistant_profile_id
+        and (ap.status = 'active' or ap.user_id = aura_current_user_id())
+    )
+  )
+  with check (
+    aura_is_admin()
+    or exists (
+      select 1 from assistant_profiles ap
+      where ap.id = assistant_services.assistant_profile_id
+        and ap.user_id = aura_current_user_id()
+    )
+  );
+
+alter table service_requests enable row level security;
+alter table service_requests force row level security;
+drop policy if exists service_requests_owner on service_requests;
+create policy service_requests_owner on service_requests
+  for all using (aura_is_admin() or client_user_id = aura_current_user_id())
+  with check (aura_is_admin() or client_user_id = aura_current_user_id());
+
+alter table bookings enable row level security;
+alter table bookings force row level security;
+drop policy if exists bookings_related_user on bookings;
+create policy bookings_related_user on bookings
+  for all using (
+    aura_is_admin()
+    or exists (
+      select 1 from service_requests sr
+      where sr.id = bookings.service_request_id
+        and sr.client_user_id = aura_current_user_id()
+    )
+    or exists (
+      select 1 from assistant_profiles ap
+      where ap.id = bookings.assistant_profile_id
+        and ap.user_id = aura_current_user_id()
+    )
+  )
+  with check (
+    aura_is_admin()
+    or exists (
+      select 1 from service_requests sr
+      where sr.id = bookings.service_request_id
+        and sr.client_user_id = aura_current_user_id()
+    )
+    or exists (
+      select 1 from assistant_profiles ap
+      where ap.id = bookings.assistant_profile_id
+        and ap.user_id = aura_current_user_id()
+    )
+  );
+
+alter table booking_events enable row level security;
+alter table booking_events force row level security;
+drop policy if exists booking_events_related_user on booking_events;
+create policy booking_events_related_user on booking_events
+  for all using (
+    aura_is_admin()
+    or exists (
+      select 1 from bookings b
+      join service_requests sr on sr.id = b.service_request_id
+      where b.id = booking_events.booking_id
+        and sr.client_user_id = aura_current_user_id()
+    )
+  )
+  with check (
+    aura_is_admin()
+    or exists (
+      select 1 from bookings b
+      join service_requests sr on sr.id = b.service_request_id
+      where b.id = booking_events.booking_id
+        and sr.client_user_id = aura_current_user_id()
+    )
+  );
+
+alter table calendar_holds enable row level security;
+alter table calendar_holds force row level security;
+drop policy if exists calendar_holds_owner on calendar_holds;
+create policy calendar_holds_owner on calendar_holds
+  for all using (
+    aura_is_admin()
+    or exists (
+      select 1 from service_requests sr
+      where sr.id = calendar_holds.service_request_id
+        and sr.client_user_id = aura_current_user_id()
+    )
+  )
+  with check (
+    aura_is_admin()
+    or exists (
+      select 1 from service_requests sr
+      where sr.id = calendar_holds.service_request_id
+        and sr.client_user_id = aura_current_user_id()
+    )
+  );
+
+alter table job_checklist_items enable row level security;
+alter table job_checklist_items force row level security;
+drop policy if exists job_checklist_items_owner on job_checklist_items;
+create policy job_checklist_items_owner on job_checklist_items
+  for all using (
+    aura_is_admin()
+    or exists (
+      select 1 from bookings b
+      join service_requests sr on sr.id = b.service_request_id
+      where b.id = job_checklist_items.booking_id
+        and sr.client_user_id = aura_current_user_id()
+    )
+  )
+  with check (
+    aura_is_admin()
+    or exists (
+      select 1 from bookings b
+      join service_requests sr on sr.id = b.service_request_id
+      where b.id = job_checklist_items.booking_id
+        and sr.client_user_id = aura_current_user_id()
+    )
+  );
+
+alter table cleaning_plans enable row level security;
+alter table cleaning_plans force row level security;
+drop policy if exists cleaning_plans_owner on cleaning_plans;
+create policy cleaning_plans_owner on cleaning_plans
+  for all using (aura_is_admin() or client_user_id = aura_current_user_id())
+  with check (aura_is_admin() or client_user_id = aura_current_user_id());
+
+alter table cleaning_plan_rooms enable row level security;
+alter table cleaning_plan_rooms force row level security;
+drop policy if exists cleaning_plan_rooms_owner on cleaning_plan_rooms;
+create policy cleaning_plan_rooms_owner on cleaning_plan_rooms
+  for all using (
+    aura_is_admin()
+    or exists (
+      select 1 from cleaning_plans cp
+      where cp.id = cleaning_plan_rooms.cleaning_plan_id
+        and cp.client_user_id = aura_current_user_id()
+    )
+  )
+  with check (
+    aura_is_admin()
+    or exists (
+      select 1 from cleaning_plans cp
+      where cp.id = cleaning_plan_rooms.cleaning_plan_id
+        and cp.client_user_id = aura_current_user_id()
+    )
+  );
+
+alter table cleaning_plan_tasks enable row level security;
+alter table cleaning_plan_tasks force row level security;
+drop policy if exists cleaning_plan_tasks_owner on cleaning_plan_tasks;
+create policy cleaning_plan_tasks_owner on cleaning_plan_tasks
+  for all using (
+    aura_is_admin()
+    or exists (
+      select 1 from cleaning_plan_rooms cpr
+      join cleaning_plans cp on cp.id = cpr.cleaning_plan_id
+      where cpr.id = cleaning_plan_tasks.cleaning_plan_room_id
+        and cp.client_user_id = aura_current_user_id()
+    )
+  )
+  with check (
+    aura_is_admin()
+    or exists (
+      select 1 from cleaning_plan_rooms cpr
+      join cleaning_plans cp on cp.id = cpr.cleaning_plan_id
+      where cpr.id = cleaning_plan_tasks.cleaning_plan_room_id
+        and cp.client_user_id = aura_current_user_id()
+    )
+  );
+
+alter table feedback_events enable row level security;
+alter table feedback_events force row level security;
+drop policy if exists feedback_events_related_user on feedback_events;
+create policy feedback_events_related_user on feedback_events
+  for all using (
+    aura_is_admin()
+    or client_user_id = aura_current_user_id()
+    or exists (
+      select 1 from assistant_profiles ap
+      where ap.id = feedback_events.assistant_profile_id
+        and ap.user_id = aura_current_user_id()
+    )
+  )
+  with check (
+    aura_is_admin()
+    or client_user_id = aura_current_user_id()
+    or exists (
+      select 1 from assistant_profiles ap
+      where ap.id = feedback_events.assistant_profile_id
+        and ap.user_id = aura_current_user_id()
+    )
+  );
+
+alter table inventory_locations enable row level security;
+alter table inventory_locations force row level security;
+drop policy if exists inventory_locations_owner on inventory_locations;
+create policy inventory_locations_owner on inventory_locations
+  for all using (aura_is_admin() or client_user_id = aura_current_user_id())
+  with check (aura_is_admin() or client_user_id = aura_current_user_id());
+
+alter table inventory_items enable row level security;
+alter table inventory_items force row level security;
+drop policy if exists inventory_items_owner on inventory_items;
+create policy inventory_items_owner on inventory_items
+  for all using (
+    aura_is_admin()
+    or exists (
+      select 1 from inventory_locations il
+      where il.id = inventory_items.location_id
+        and il.client_user_id = aura_current_user_id()
+    )
+  )
+  with check (
+    aura_is_admin()
+    or exists (
+      select 1 from inventory_locations il
+      where il.id = inventory_items.location_id
+        and il.client_user_id = aura_current_user_id()
+    )
+  );
+
+alter table inventory_image_scans enable row level security;
+alter table inventory_image_scans force row level security;
+drop policy if exists inventory_image_scans_owner on inventory_image_scans;
+create policy inventory_image_scans_owner on inventory_image_scans
+  for all using (aura_is_admin() or client_user_id = aura_current_user_id())
+  with check (aura_is_admin() or client_user_id = aura_current_user_id());
+
+alter table image_scan_detections enable row level security;
+alter table image_scan_detections force row level security;
+drop policy if exists image_scan_detections_owner on image_scan_detections;
+create policy image_scan_detections_owner on image_scan_detections
+  for all using (
+    aura_is_admin()
+    or exists (
+      select 1 from inventory_image_scans iis
+      where iis.id = image_scan_detections.scan_id
+        and iis.client_user_id = aura_current_user_id()
+    )
+  )
+  with check (
+    aura_is_admin()
+    or exists (
+      select 1 from inventory_image_scans iis
+      where iis.id = image_scan_detections.scan_id
+        and iis.client_user_id = aura_current_user_id()
+    )
+  );
+
+alter table match_runs enable row level security;
+alter table match_runs force row level security;
+drop policy if exists match_runs_owner on match_runs;
+create policy match_runs_owner on match_runs
+  for all using (
+    aura_is_admin()
+    or exists (
+      select 1 from service_requests sr
+      where sr.id = match_runs.service_request_id
+        and sr.client_user_id = aura_current_user_id()
+    )
+  )
+  with check (
+    aura_is_admin()
+    or exists (
+      select 1 from service_requests sr
+      where sr.id = match_runs.service_request_id
+        and sr.client_user_id = aura_current_user_id()
+    )
+  );
+
+alter table aura_memory_nodes enable row level security;
+alter table aura_memory_nodes force row level security;
+drop policy if exists aura_memory_nodes_owner on aura_memory_nodes;
+create policy aura_memory_nodes_owner on aura_memory_nodes
+  for all using (aura_is_admin() or client_user_id = aura_current_user_id())
+  with check (aura_is_admin() or client_user_id = aura_current_user_id());
+
+alter table autopilot_loops enable row level security;
+alter table autopilot_loops force row level security;
+drop policy if exists autopilot_loops_owner on autopilot_loops;
+create policy autopilot_loops_owner on autopilot_loops
+  for all using (aura_is_admin() or client_user_id = aura_current_user_id())
+  with check (aura_is_admin() or client_user_id = aura_current_user_id());
+
+alter table assistant_missions enable row level security;
+alter table assistant_missions force row level security;
+drop policy if exists assistant_missions_related_user on assistant_missions;
+create policy assistant_missions_related_user on assistant_missions
+  for all using (
+    aura_is_admin()
+    or exists (
+      select 1 from assistant_profiles ap
+      where ap.id = assistant_missions.assistant_profile_id
+        and ap.user_id = aura_current_user_id()
+    )
+  )
+  with check (
+    aura_is_admin()
+    or exists (
+      select 1 from assistant_profiles ap
+      where ap.id = assistant_missions.assistant_profile_id
+        and ap.user_id = aura_current_user_id()
+    )
+  );
+
+alter table assistant_payouts enable row level security;
+alter table assistant_payouts force row level security;
+drop policy if exists assistant_payouts_related_user on assistant_payouts;
+create policy assistant_payouts_related_user on assistant_payouts
+  for all using (
+    aura_is_admin()
+    or exists (
+      select 1 from assistant_profiles ap
+      where ap.id = assistant_payouts.assistant_profile_id
+        and ap.user_id = aura_current_user_id()
+    )
+  )
+  with check (
+    aura_is_admin()
+    or exists (
+      select 1 from assistant_profiles ap
+      where ap.id = assistant_payouts.assistant_profile_id
+        and ap.user_id = aura_current_user_id()
+    )
+  );
