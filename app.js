@@ -401,6 +401,7 @@ const adminFeedbackCount = document.querySelector("#adminFeedbackCount");
 
 let auth0Client = null;
 let authConfig = null;
+const fallbackAuthStorageKey = "aura.auth.pkce";
 let authState = {
   ready: false,
   enabled: false,
@@ -1031,11 +1032,11 @@ async function requestHeaders(includeJson) {
 }
 
 async function accessToken() {
+  if (authState.token) return authState.token;
+
   if (!authState.enabled || !authState.authenticated || !auth0Client || !authConfig?.audience) {
     return "";
   }
-
-  if (authState.token) return authState.token;
 
   try {
     authState.token = await auth0Client.getTokenSilently({
@@ -1052,6 +1053,117 @@ async function accessToken() {
 
 function authRedirectUri() {
   return window.location.origin;
+}
+
+function authOrigin() {
+  const domain = authConfig?.domain || "";
+  return domain.startsWith("http") ? domain.replace(/\/$/, "") : `https://${domain}`;
+}
+
+function base64Url(bytes) {
+  return btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+}
+
+function randomToken(byteLength = 32) {
+  const bytes = new Uint8Array(byteLength);
+  window.crypto.getRandomValues(bytes);
+  return base64Url(bytes);
+}
+
+async function codeChallengeFor(verifier) {
+  const bytes = new TextEncoder().encode(verifier);
+  const digest = await window.crypto.subtle.digest("SHA-256", bytes);
+  return base64Url(new Uint8Array(digest));
+}
+
+function decodeJwtPayload(token) {
+  const payload = token?.split(".")?.[1];
+  if (!payload) return null;
+  const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = `${normalized}${"=".repeat((4 - (normalized.length % 4)) % 4)}`;
+  return JSON.parse(atob(padded));
+}
+
+async function startFallbackAuthRedirect() {
+  if (!authConfig?.enabled || !authConfig?.domain || !authConfig?.clientId) {
+    authPortalStatus.textContent = "Auth0 config is missing. Check Vercel environment variables.";
+    authPortalContinue.disabled = false;
+    return;
+  }
+
+  const state = randomToken(32);
+  const nonce = randomToken(32);
+  const codeVerifier = randomToken(64);
+  const codeChallenge = await codeChallengeFor(codeVerifier);
+  const returnTo = `${window.location.pathname}${window.location.hash || ""}`;
+
+  sessionStorage.setItem(
+    fallbackAuthStorageKey,
+    JSON.stringify({
+      state,
+      nonce,
+      codeVerifier,
+      returnTo,
+      createdAt: Date.now()
+    })
+  );
+
+  const authorizeUrl = new URL("/authorize", authOrigin());
+  authorizeUrl.searchParams.set("client_id", authConfig.clientId);
+  authorizeUrl.searchParams.set("redirect_uri", authRedirectUri());
+  authorizeUrl.searchParams.set("response_type", "code");
+  authorizeUrl.searchParams.set("scope", authConfig.scope || "openid profile email");
+  authorizeUrl.searchParams.set("state", state);
+  authorizeUrl.searchParams.set("nonce", nonce);
+  authorizeUrl.searchParams.set("code_challenge", codeChallenge);
+  authorizeUrl.searchParams.set("code_challenge_method", "S256");
+  if (authConfig.audience) authorizeUrl.searchParams.set("audience", authConfig.audience);
+
+  window.location.assign(authorizeUrl.toString());
+}
+
+async function handleFallbackAuthCallback() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get("code");
+  const state = params.get("state");
+  if (!code || !state) return false;
+
+  const rawTransaction = sessionStorage.getItem(fallbackAuthStorageKey);
+  if (!rawTransaction) return false;
+
+  const transaction = JSON.parse(rawTransaction);
+  if (transaction.state !== state) return false;
+
+  const response = await fetch(new URL("/oauth/token", authOrigin()).toString(), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      grant_type: "authorization_code",
+      client_id: authConfig.clientId,
+      code,
+      code_verifier: transaction.codeVerifier,
+      redirect_uri: authRedirectUri()
+    })
+  });
+
+  if (!response.ok) {
+    sessionStorage.removeItem(fallbackAuthStorageKey);
+    throw new Error("Auth0 token exchange failed");
+  }
+
+  const tokens = await response.json();
+  const user = decodeJwtPayload(tokens.id_token);
+  if (!user) throw new Error("Auth0 did not return an ID token");
+
+  sessionStorage.removeItem(fallbackAuthStorageKey);
+  authState.token = tokens.access_token || "";
+  authState.authenticated = true;
+  authState.user = user;
+  window.history.replaceState({}, document.title, transaction.returnTo || window.location.pathname);
+  return true;
 }
 
 function renderAuthPortalState() {
@@ -1340,17 +1452,51 @@ async function loadAdminOverview() {
 }
 
 async function continueAuth0Login() {
-  if (!auth0Client || !authConfig?.enabled) return;
-  await auth0Client.loginWithRedirect({
-    authorizationParams: {
-      redirect_uri: authRedirectUri(),
-      audience: authConfig.audience || undefined,
-      scope: authConfig.scope
+  if (!authConfig?.enabled) {
+    renderAuthPortalState();
+    return;
+  }
+
+  authPortalContinue.disabled = true;
+  authPortalStatus.textContent = "Opening Auth0...";
+
+  if (!auth0Client) {
+    await startFallbackAuthRedirect();
+    return;
+  }
+
+  let redirectStarted = false;
+  window.addEventListener(
+    "pagehide",
+    () => {
+      redirectStarted = true;
     },
-    appState: {
-      returnTo: `${window.location.pathname}${window.location.hash || ""}`
+    { once: true }
+  );
+
+  window.setTimeout(() => {
+    if (!redirectStarted && !document.hidden) {
+      startFallbackAuthRedirect().catch(() => {
+        authPortalContinue.disabled = false;
+        authPortalStatus.textContent = "Could not open Auth0. Check allowed callback and web origin URLs.";
+      });
     }
-  });
+  }, 900);
+
+  try {
+    await auth0Client.loginWithRedirect({
+      authorizationParams: {
+        redirect_uri: authRedirectUri(),
+        audience: authConfig.audience || undefined,
+        scope: authConfig.scope
+      },
+      appState: {
+        returnTo: `${window.location.pathname}${window.location.hash || ""}`
+      }
+    });
+  } catch {
+    await startFallbackAuthRedirect();
+  }
 }
 
 function login() {
@@ -1358,6 +1504,16 @@ function login() {
 }
 
 async function logout() {
+  sessionStorage.removeItem(fallbackAuthStorageKey);
+
+  if (!auth0Client && authConfig?.enabled) {
+    const logoutUrl = new URL("/v2/logout", authOrigin());
+    logoutUrl.searchParams.set("client_id", authConfig.clientId);
+    logoutUrl.searchParams.set("returnTo", authRedirectUri());
+    window.location.assign(logoutUrl.toString());
+    return;
+  }
+
   if (!auth0Client) return;
   await auth0Client.logout({
     logoutParams: {
@@ -1382,6 +1538,14 @@ async function initAuth() {
     authConfig = result.data || {};
     authState.enabled = Boolean(authConfig.enabled);
     authState.apiProtectionEnabled = Boolean(authConfig.apiProtectionEnabled);
+
+    if (await handleFallbackAuthCallback()) {
+      authState.ready = true;
+      renderAuthState();
+      await loadProfilePreferences();
+      queuePreferenceSave("auth-login");
+      return;
+    }
 
     if (!authState.enabled) {
       authState.ready = true;
