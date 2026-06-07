@@ -662,6 +662,12 @@ h3 {
   background: rgba(255, 255, 255, 0.04);
 }
 
+.money-action {
+  background: linear-gradient(135deg, var(--green), var(--cyan));
+  color: #061018;
+  box-shadow: 0 16px 38px rgba(69, 230, 161, 0.18);
+}
+
 .command-console {
   align-self: center;
   padding: 20px;
@@ -793,6 +799,39 @@ input[type="number"] {
   font-size: 1.18rem;
 }
 
+.commerce-strip {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 0.55fr);
+  gap: 10px;
+  margin: 0 0 16px;
+}
+
+.commerce-strip label,
+.commerce-strip div {
+  display: grid;
+  gap: 7px;
+  min-height: 72px;
+  padding: 10px;
+  border: 1px solid rgba(69, 230, 161, 0.26);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, rgba(69, 230, 161, 0.1), rgba(255, 211, 106, 0.06)),
+    rgba(255, 255, 255, 0.035);
+}
+
+.commerce-strip span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.commerce-strip strong {
+  align-self: end;
+  color: var(--green);
+  font-size: 1.28rem;
+}
+
 .reactor-strip {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -877,6 +916,311 @@ input[type="number"] {
 .metric-band span {
   color: var(--muted);
   font-size: 0.88rem;
+}
+
+.geo-command-section {
+  padding: 74px 32px;
+  background:
+    linear-gradient(180deg, rgba(22, 200, 255, 0.07), transparent 54%),
+    #080b10;
+}
+
+.geo-command-grid {
+  display: grid;
+  grid-template-columns: minmax(360px, 1.08fr) minmax(300px, 0.72fr);
+  gap: 16px;
+}
+
+.dispatch-map-card,
+.geo-control-card {
+  min-height: 460px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.06), transparent 42%),
+    rgba(11, 15, 23, 0.94);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.28);
+}
+
+.aura-map {
+  position: relative;
+  min-height: 390px;
+  margin: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(22, 200, 255, 0.28);
+  border-radius: var(--radius);
+  background:
+    radial-gradient(circle at 50% 52%, rgba(22, 200, 255, 0.2), transparent 9%),
+    radial-gradient(circle at 24% 30%, rgba(69, 230, 161, 0.12), transparent 20%),
+    radial-gradient(circle at 74% 66%, rgba(255, 59, 212, 0.1), transparent 22%),
+    linear-gradient(135deg, #081822, #0b0d18 58%, #071018);
+}
+
+.map-grid {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: radial-gradient(circle at center, #000 34%, transparent 78%);
+}
+
+.map-neighborhood {
+  position: absolute;
+  z-index: 2;
+  color: rgba(231, 237, 248, 0.6);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.map-neighborhood.n1 {
+  left: 9%;
+  top: 15%;
+}
+
+.map-neighborhood.n2 {
+  right: 9%;
+  top: 26%;
+}
+
+.map-neighborhood.n3 {
+  right: 12%;
+  bottom: 14%;
+}
+
+.route-beam,
+.route-shadow {
+  position: absolute;
+  left: 22%;
+  top: 57%;
+  width: 62%;
+  height: 5px;
+  border-radius: 999px;
+  transform: rotate(-18deg);
+  transform-origin: left center;
+}
+
+.route-beam {
+  z-index: 3;
+  background: linear-gradient(90deg, var(--cyan), var(--green), var(--pink));
+  box-shadow: 0 0 22px rgba(22, 200, 255, 0.42);
+}
+
+.route-shadow {
+  z-index: 2;
+  height: 42px;
+  margin-top: -18px;
+  background: linear-gradient(90deg, rgba(22, 200, 255, 0.12), rgba(255, 59, 212, 0.08), transparent);
+  filter: blur(12px);
+}
+
+.client-pin,
+.destination-pin,
+.supply-pin,
+.courier-pulse {
+  position: absolute;
+  z-index: 5;
+}
+
+.client-pin,
+.destination-pin {
+  display: grid;
+  gap: 5px;
+  justify-items: center;
+  transform: translate(-50%, -50%);
+}
+
+.client-pin {
+  left: var(--client-x, 22%);
+  top: var(--client-y, 58%);
+}
+
+.destination-pin {
+  left: 82%;
+  top: 39%;
+}
+
+.client-pin b,
+.destination-pin b,
+.supply-pin b {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  color: #061018;
+  background: var(--ink);
+  box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.08);
+}
+
+.client-pin b {
+  background: linear-gradient(135deg, var(--cyan), var(--pink));
+  color: #fff;
+}
+
+.client-pin.is-device-live b {
+  box-shadow:
+    0 0 0 8px rgba(22, 200, 255, 0.12),
+    0 0 34px rgba(22, 200, 255, 0.55);
+}
+
+.destination-pin b {
+  background: var(--green);
+}
+
+.client-pin span,
+.destination-pin span,
+.supply-pin span {
+  color: var(--ink);
+  background: rgba(0, 0, 0, 0.52);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 7px;
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+.courier-pulse {
+  left: 50%;
+  top: 49%;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 0 0 rgba(255, 211, 106, 0.35);
+  opacity: 0.22;
+}
+
+.courier-pulse.is-live {
+  opacity: 1;
+  animation: routeApproach 6s linear infinite;
+}
+
+.courier-pulse i {
+  position: absolute;
+  inset: 7px;
+  border-radius: inherit;
+  background: #061018;
+}
+
+.supply-pin {
+  left: var(--x);
+  top: var(--y);
+  display: grid;
+  gap: 3px;
+  justify-items: center;
+  border: 0;
+  background: transparent;
+  transform: translate(-50%, -50%);
+}
+
+.supply-pin b {
+  width: 34px;
+  height: 34px;
+  background: #101723;
+  border: 1px solid rgba(69, 230, 161, 0.55);
+  color: var(--green);
+  font-size: 0.76rem;
+}
+
+.supply-empty {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  z-index: 6;
+  display: grid;
+  gap: 4px;
+  min-width: min(300px, calc(100% - 36px));
+  padding: 12px;
+  border: 1px solid rgba(22, 200, 255, 0.3);
+  border-radius: var(--radius);
+  background: rgba(5, 10, 16, 0.76);
+  transform: translateX(-50%);
+}
+
+.supply-empty span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.geo-control-card {
+  display: grid;
+  align-content: start;
+}
+
+.geo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 18px;
+}
+
+.geo-brief,
+.geo-payment-hold {
+  display: grid;
+  gap: 10px;
+  margin: 18px;
+  padding: 16px;
+  border: 1px solid rgba(22, 200, 255, 0.26);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, rgba(22, 200, 255, 0.12), rgba(69, 230, 161, 0.06)),
+    rgba(255, 255, 255, 0.04);
+}
+
+.geo-brief span,
+.geo-payment-hold span,
+.geo-payment-hold small {
+  color: var(--muted);
+}
+
+.geo-brief strong,
+.geo-payment-hold strong {
+  font-size: 1.38rem;
+}
+
+.geo-telemetry {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0 18px;
+}
+
+.geo-telemetry div {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.geo-telemetry span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.geo-telemetry strong {
+  color: var(--ink);
+}
+
+@keyframes routeApproach {
+  0% {
+    left: 25%;
+    top: 56%;
+  }
+  50% {
+    left: 54%;
+    top: 48%;
+  }
+  100% {
+    left: 80%;
+    top: 39%;
+  }
 }
 
 .artillery-section,
@@ -2300,6 +2644,7 @@ output {
   }
 
   .hero-workbench,
+  .geo-command-grid,
   .intake-studio,
   .split-section,
   .reactor-grid,
@@ -2376,6 +2721,7 @@ output {
   }
 
   .hero-workbench,
+  .geo-command-section,
   .intake-section,
   .work-grid,
   .split-section,
@@ -2420,6 +2766,7 @@ output {
 
   .booking-grid,
   .quote-strip,
+  .commerce-strip,
   .reactor-strip,
   .metric-band,
   .admin-stat-grid {

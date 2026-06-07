@@ -27,6 +27,7 @@ const apiRoutes = {
   "/api/auth/logout": "api/auth/logout.js",
   "/api/auth/session": "api/auth/session.js",
   "/api/bookings": "api/bookings.js",
+  "/api/checkout": "api/checkout.js",
   "/api/cleaning-plan": "api/cleaning-plan.js",
   "/api/feedback": "api/feedback.js",
   "/api/inventory": "api/inventory.js",

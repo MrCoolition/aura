@@ -8,6 +8,19 @@ const serviceTemplates = {
   inventory: "Scan the fridge and supply closet, flag low stock, create a shopping list, and schedule a restock assistant."
 };
 
+const geoProfiles = {
+  home: { mode: "Home reset route", distance: "2.8 mi", compression: 38, proof: "arrival + final room proof", start: "Residence", end: "Reset complete" },
+  calendar: { mode: "Calendar shield route", distance: "1.4 mi", compression: 22, proof: "timeline confirmation", start: "Protected block", end: "Booked day" },
+  errands: { mode: "Errand loop", distance: "6.6 mi", compression: 44, proof: "pickup + drop photos", start: "Client base", end: "Final drop" },
+  travel: { mode: "Travel choreography", distance: "12.1 mi", compression: 31, proof: "hold confirmations", start: "Home base", end: "Airport ready" },
+  inventory: { mode: "Restock corridor", distance: "4.2 mi", compression: 41, proof: "shelf + receipt proof", start: "Inventory scan", end: "Restocked" }
+};
+
+const offerCatalog = {
+  plus: { label: "AURA Plus monthly", amount: 49, cadence: "monthly subscription" },
+  black: { label: "AURA Black monthly", amount: 199, cadence: "monthly subscription" }
+};
+
 const timelineItems = [
   { time: "9:20", title: "Assistant arrival window", body: "AURA confirms access, proof expectations, and the first room or stop before dispatch.", score: 98 },
   { time: "11:10", title: "Errand route", body: "Dry cleaning, package return, and grocery restock batched into one loop.", score: 94 },
@@ -289,9 +302,26 @@ const timeSelect = document.querySelector("#timeSelect");
 const quotePrice = document.querySelector("#quotePrice");
 const assistantPayout = document.querySelector("#assistantPayout");
 const auraFee = document.querySelector("#auraFee");
+const offerSelect = document.querySelector("#offerSelect");
+const offerPrice = document.querySelector("#offerPrice");
+const offerCadence = document.querySelector("#offerCadence");
 const bookingStatus = document.querySelector("#bookingStatus");
+const stripeCheckout = document.querySelector("#stripeCheckout");
 const marketPill = document.querySelector("#marketPill");
 const assistantList = document.querySelector("#assistantList");
+const geoSupplyCount = document.querySelector("#geoSupplyCount");
+const geoEta = document.querySelector("#geoEta");
+const geoMode = document.querySelector("#geoMode");
+const geoHeadline = document.querySelector("#geoHeadline");
+const geoStatus = document.querySelector("#geoStatus");
+const geoHold = document.querySelector("#geoHold");
+const geoTelemetry = document.querySelector("#geoTelemetry");
+const geoSupplyLayer = document.querySelector("#geoSupplyLayer");
+const geoCourier = document.querySelector("#geoCourier");
+const geoLocate = document.querySelector("#geoLocate");
+const geoWatch = document.querySelector("#geoWatch");
+const geoStop = document.querySelector("#geoStop");
+const clientPin = document.querySelector(".client-pin");
 const timeline = document.querySelector("#timeline");
 const calendarInsightsEl = document.querySelector("#calendarInsights");
 const checklistBoard = document.querySelector("#checklistBoard");
@@ -426,6 +456,12 @@ let authState = {
 };
 let preferenceSaveTimer = null;
 let pendingAuthContext = defaultAuthContext;
+const geoState = {
+  position: null,
+  watchId: null,
+  tracking: false,
+  error: ""
+};
 
 function currency(value) {
   return new Intl.NumberFormat("en-US", {
@@ -450,6 +486,24 @@ function quoteState() {
   const total = Math.max(65, base + urgency + recurringCredit);
   const fee = Math.round(total * 0.18);
   return { total, fee, payout: total - fee };
+}
+
+function offerState() {
+  const selected = offerSelect?.value || "booking";
+  if (selected === "booking") {
+    const { total } = quoteState();
+    return {
+      type: "booking",
+      label: "AURA booking reservation",
+      amount: total,
+      cadence: "one-time checkout"
+    };
+  }
+
+  return {
+    type: selected,
+    ...(offerCatalog[selected] || offerCatalog.plus)
+  };
 }
 
 function topAssistant(service = selectedService()) {
@@ -482,7 +536,9 @@ function normalizeAssistant(row) {
     rating: Number(row.rating || 0),
     jobs: Number(row.completed_jobs || row.jobs || 0),
     tags: Array.isArray(row.ai_tags) ? row.ai_tags : Array.isArray(row.tags) ? row.tags : [],
-    bio: String(row.bio || "Profile supplied by the verified assistant network.").trim()
+    bio: String(row.bio || "Profile supplied by the verified assistant network.").trim(),
+    latitude: Number(row.latitude || row.lat || NaN),
+    longitude: Number(row.longitude || row.lng || NaN)
   };
 }
 
@@ -491,9 +547,252 @@ function updateQuote() {
   quotePrice.textContent = currency(total);
   assistantPayout.textContent = currency(payout);
   auraFee.textContent = currency(fee);
+  updateOffer();
+  renderGeoCommand();
   renderReactor(selectedService());
   renderMatchLattice(selectedService());
   renderValueStack(total, fee, payout);
+}
+
+function updateOffer() {
+  if (!offerPrice || !offerCadence) return;
+  const offer = offerState();
+  offerPrice.textContent = currency(offer.amount);
+  offerCadence.textContent = offer.cadence;
+  if (stripeCheckout) {
+    stripeCheckout.textContent = offer.type === "booking" ? "Secure checkout" : "Start subscription";
+  }
+}
+
+function geoAssistantPoints(service = selectedService()) {
+  const located = assistantSupply.filter((assistant) => Number.isFinite(assistant.latitude) && Number.isFinite(assistant.longitude));
+  if (!located.length) return [];
+  if (located.length === 1) {
+    const assistant = located[0];
+    return [
+      {
+        ...assistant,
+        x: 62,
+        y: 36,
+        fit:
+          62 +
+          (assistant.tags.join(" ").toLowerCase().includes(service) ? 22 : 6) +
+          Math.round((assistant.rating - 4.9) * 80) +
+          Math.max(0, 10 - Math.round(assistant.eta / 4))
+      }
+    ];
+  }
+
+  const minLat = Math.min(...located.map((assistant) => assistant.latitude));
+  const maxLat = Math.max(...located.map((assistant) => assistant.latitude));
+  const minLng = Math.min(...located.map((assistant) => assistant.longitude));
+  const maxLng = Math.max(...located.map((assistant) => assistant.longitude));
+  const latSpan = maxLat - minLat || 0.01;
+  const lngSpan = maxLng - minLng || 0.01;
+
+  return located.map((assistant) => ({
+    ...assistant,
+    x: 12 + ((assistant.longitude - minLng) / lngSpan) * 76,
+    y: 82 - ((assistant.latitude - minLat) / latSpan) * 64,
+    fit:
+      62 +
+      (assistant.tags.join(" ").toLowerCase().includes(service) ? 22 : 6) +
+      Math.round((assistant.rating - 4.9) * 80) +
+      Math.max(0, 10 - Math.round(assistant.eta / 4))
+  }));
+}
+
+function geoOptions() {
+  return {
+    enableHighAccuracy: true,
+    maximumAge: 15000,
+    timeout: 12000
+  };
+}
+
+function formatCoordinate(value) {
+  return Number(value).toFixed(4);
+}
+
+function applyDevicePosition(position, tracking = false) {
+  geoState.position = position;
+  geoState.tracking = tracking;
+  geoState.error = "";
+  renderGeoCommand();
+}
+
+function handleGeoError(error) {
+  geoState.error =
+    error?.code === 1
+      ? "Location permission was blocked. Enable location for this site to make dispatch live."
+      : "AURA could not read this device location. Try again from the phone or browser you want to track.";
+  geoState.tracking = false;
+  if (geoWatch) geoWatch.disabled = false;
+  if (geoStop) geoStop.hidden = true;
+  renderGeoCommand();
+}
+
+function requestDeviceLocation(track = false) {
+  if (!navigator.geolocation) {
+    geoState.error = "This browser does not support device geolocation.";
+    renderGeoCommand();
+    return;
+  }
+
+  geoState.error = "";
+  geoStatus.textContent = track ? "Watching this device location..." : "Requesting this device location...";
+
+  if (track) {
+    if (geoState.watchId !== null) {
+      navigator.geolocation.clearWatch(geoState.watchId);
+    }
+    geoState.tracking = true;
+    geoState.watchId = navigator.geolocation.watchPosition(
+      (position) => applyDevicePosition(position, true),
+      handleGeoError,
+      geoOptions()
+    );
+    if (geoWatch) geoWatch.disabled = true;
+    if (geoStop) geoStop.hidden = false;
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => applyDevicePosition(position, false),
+    handleGeoError,
+    geoOptions()
+  );
+}
+
+function stopDeviceLocation() {
+  if (geoState.watchId !== null && navigator.geolocation) {
+    navigator.geolocation.clearWatch(geoState.watchId);
+  }
+  geoState.watchId = null;
+  geoState.tracking = false;
+  if (geoWatch) geoWatch.disabled = false;
+  if (geoStop) geoStop.hidden = true;
+  renderGeoCommand();
+}
+
+function renderGeoCommand() {
+  if (!geoSupplyCount || !geoSupplyLayer) return;
+  const service = selectedService();
+  const profile = geoProfiles[service] || geoProfiles.home;
+  const points = geoAssistantPoints(service);
+  const assistant = points.sort((a, b) => b.fit - a.fit)[0] || null;
+  const topVerifiedAssistant = topAssistant(service);
+  const { total, fee } = quoteState();
+  const paidState = offerSelect?.value === "booking" ? `${currency(total)} hold ready` : "subscription ready";
+  const eta = assistant?.eta ? `${assistant.eta}m ETA` : "ETA pending";
+  const device = geoState.position;
+  const coords = device?.coords;
+  const accuracy = coords ? Math.round(coords.accuracy) : null;
+  const deviceLocked = Boolean(coords);
+
+  geoSupplyCount.textContent = points.length
+    ? `${points.length} live`
+    : assistantSupply.length
+      ? `${assistantSupply.length} verified`
+      : "0 available";
+  geoEta.textContent = assistant ? eta : deviceLocked ? (geoState.tracking ? "Device live" : "Device locked") : "Enable location";
+  geoMode.textContent = profile.mode;
+  geoHold.textContent = paidState;
+  geoCourier?.classList.toggle("is-live", Boolean(assistant));
+  clientPin?.classList.toggle("is-device-live", deviceLocked);
+
+  if (geoState.error) {
+    geoHeadline.textContent = "Location is not active yet";
+    geoStatus.textContent = geoState.error;
+  } else if (assistant) {
+    geoHeadline.textContent = `${assistant.name} can approach on a ${profile.distance} optimized route`;
+    geoStatus.textContent = `AURA is tracking ${profile.start} to ${profile.end}: ${profile.compression}% route compression, ${profile.proof}, ${currency(fee)} platform revenue.`;
+  } else if (deviceLocked) {
+    geoHeadline.textContent = "Your request pin is live from this device";
+    geoStatus.textContent = `Device lock: ${formatCoordinate(coords.latitude)}, ${formatCoordinate(coords.longitude)} with about ${accuracy}m accuracy. Assistant movement appears when an accepted worker shares their phone location.`;
+  } else if (topVerifiedAssistant) {
+    geoHeadline.textContent = `${topVerifiedAssistant.name} is verified; enable device location to anchor the request`;
+    geoStatus.textContent = "Use this phone or computer location to place the request pin. Accepted assistants can share their own live approach from their device.";
+  } else {
+    geoHeadline.textContent = "Anchor this request from your device";
+    geoStatus.textContent = "Use phone or computer location to make the request pin live. Assistants can share their own device location when they accept a dispatch.";
+  }
+
+  geoTelemetry.innerHTML = [
+    { label: "Route", value: profile.distance },
+    { label: "Compression", value: `${profile.compression}%` },
+    { label: "Device", value: deviceLocked ? `±${accuracy}m` : "Not shared" },
+    { label: "Revenue", value: currency(fee) }
+  ]
+    .map(
+      (item) => `
+        <div>
+          <span>${escapeHtml(item.label)}</span>
+          <strong>${escapeHtml(item.value)}</strong>
+        </div>
+      `
+    )
+    .join("");
+
+  geoSupplyLayer.innerHTML = points.length
+    ? points
+        .slice(0, 6)
+        .map(
+          (point) => `
+            <button class="supply-pin" data-assistant="${escapeHtml(point.id)}" style="--x: ${point.x}%; --y: ${point.y}%;" type="button" aria-label="${escapeHtml(point.name)} map pin">
+              <b>${escapeHtml(point.initials)}</b>
+              <span>${point.eta ? `${point.eta}m` : "Live"}</span>
+            </button>
+          `
+        )
+        .join("")
+    : `
+      <div class="supply-empty">
+        <strong>${deviceLocked ? "Device pin live" : "Enable device location"}</strong>
+        <span>${deviceLocked ? "Accepted assistant movement appears after their phone shares location." : "Use this phone or computer as the live request anchor."}</span>
+      </div>
+    `;
+}
+
+async function launchCheckout() {
+  if (!(await ensureSignedIn("Checkout"))) return;
+
+  const offer = offerState();
+  const { total, fee, payout } = quoteState();
+  const service = selectedService();
+  const assistant = topAssistant(service);
+
+  stripeCheckout.disabled = true;
+  bookingStatus.textContent =
+    offer.type === "booking" ? "Opening secure checkout for this booking..." : "Opening secure subscription checkout...";
+
+  try {
+    const result = await postJson("/api/checkout", {
+      offerType: offer.type,
+      offerLabel: offer.label,
+      amountCents: Math.round(offer.amount * 100),
+      taskSummary: taskInput.value,
+      serviceCategory: service,
+      urgency: timeSelect.value,
+      market: currentMarket(),
+      budgetCents: total * 100,
+      platformFeeCents: fee * 100,
+      assistantPayoutCents: payout * 100,
+      assistantId: assistant?.id || null,
+      returnTo: `${window.location.origin}${window.location.pathname}`
+    });
+
+    const checkoutUrl = result.data?.url || result.url;
+    if (!checkoutUrl) throw new Error("Checkout URL missing");
+    window.location.assign(checkoutUrl);
+  } catch (error) {
+    bookingStatus.textContent =
+      error?.data?.code === "CHECKOUT_NOT_CONFIGURED"
+        ? "Secure checkout needs STRIPE_SECRET_KEY or an AURA offer link configured."
+        : "Secure checkout could not start. Try again in a moment.";
+  } finally {
+    stripeCheckout.disabled = false;
+  }
 }
 
 function setMode(mode) {
@@ -2138,6 +2437,13 @@ timeSelect.addEventListener("change", () => {
   updateQuote();
   queuePreferenceSave("urgency");
 });
+offerSelect.addEventListener("change", () => {
+  updateOffer();
+  renderGeoCommand();
+});
+geoLocate.addEventListener("click", () => requestDeviceLocation(false));
+geoWatch.addEventListener("click", () => requestDeviceLocation(true));
+geoStop.addEventListener("click", stopDeviceLocation);
 
 loginButton.addEventListener("click", login);
 logoutButton.addEventListener("click", logout);
@@ -2192,6 +2498,7 @@ document.querySelector("#bookRequest").addEventListener("click", async () => {
 });
 
 document.querySelector("#optimizeDay").addEventListener("click", runAiOpsPlan);
+stripeCheckout.addEventListener("click", launchCheckout);
 
 assistantList.addEventListener("click", (event) => {
   const profileJump = event.target.closest("[data-jump-profile]");
@@ -2205,6 +2512,15 @@ assistantList.addEventListener("click", (event) => {
   const assistant = assistantSupply.find((item) => item.id === button.dataset.assistant);
   if (!assistant) return;
   bookingStatus.textContent = `${assistant.name} is reserved for your request. Confirm details when ready.`;
+  document.querySelector(".command-console").scrollIntoView({ behavior: "smooth" });
+});
+
+geoSupplyLayer.addEventListener("click", (event) => {
+  const button = event.target.closest(".supply-pin");
+  if (!button) return;
+  const assistant = assistantSupply.find((item) => item.id === button.dataset.assistant);
+  if (!assistant) return;
+  bookingStatus.textContent = `${assistant.name} selected on Geo Command. Secure checkout can reserve the job before dispatch.`;
   document.querySelector(".command-console").scrollIntoView({ behavior: "smooth" });
 });
 

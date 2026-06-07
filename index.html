@@ -25,6 +25,7 @@
           <a href="#profile">Profile</a>
           <a href="#marketplace">Marketplace</a>
           <a href="#booking-engine">Booking</a>
+          <a href="#dispatch-map">Dispatch</a>
           <a href="#calendar">Calendar</a>
           <a href="#lifeprint">Lifeprint</a>
           <a href="#inventory">Inventory</a>
@@ -185,6 +186,21 @@
               </span>
             </div>
 
+            <div class="commerce-strip" aria-label="AURA sales launcher">
+              <label>
+                <span>Sell</span>
+                <select id="offerSelect">
+                  <option value="booking" selected>Book this request</option>
+                  <option value="plus">AURA Plus monthly</option>
+                  <option value="black">AURA Black monthly</option>
+                </select>
+              </label>
+              <div>
+                <strong id="offerPrice">$140</strong>
+                <span id="offerCadence">one-time checkout</span>
+              </div>
+            </div>
+
             <div class="reactor-strip" aria-label="Live booking intelligence">
               <div>
                 <span>Match heat</span>
@@ -202,6 +218,7 @@
 
             <div class="console-actions">
               <button class="primary-action" id="bookRequest" type="button">Match now</button>
+              <button class="primary-action money-action" id="stripeCheckout" type="button">Secure checkout</button>
               <button class="ghost-action" id="optimizeDay" type="button">Optimize day</button>
             </div>
             <p class="status-line" id="bookingStatus">AURA is watching weather, traffic, ETA, and assistant fit.</p>
@@ -228,6 +245,64 @@
           <div>
             <strong>11 min</strong>
             <span>median match time</span>
+          </div>
+        </section>
+
+        <section class="geo-command-section" id="dispatch-map" aria-labelledby="geo-title">
+          <div class="section-heading">
+            <p class="eyebrow">Geo Command</p>
+            <h2 id="geo-title">Watch supply, route, ETA, and paid intent move in real time</h2>
+            <p>AURA turns a paid request into a live dispatch object: client pin, assistant availability, route compression, payment hold, and proof-ready arrival state.</p>
+          </div>
+          <div class="geo-command-grid">
+            <article class="dispatch-map-card" aria-label="Live AURA dispatch map">
+              <div class="panel-title">
+                <h3>Live dispatch map</h3>
+                <span id="geoSupplyCount">0 available</span>
+              </div>
+              <div class="aura-map" id="auraMap">
+                <div class="map-grid" aria-hidden="true"></div>
+                <div class="map-neighborhood n1">Home base</div>
+                <div class="map-neighborhood n2">Errand corridor</div>
+                <div class="map-neighborhood n3">Proof zone</div>
+                <div class="route-beam" aria-hidden="true"></div>
+                <div class="route-shadow" aria-hidden="true"></div>
+                <div class="client-pin" aria-label="Client request pin">
+                  <b>A</b>
+                  <span>Request</span>
+                </div>
+                <div class="destination-pin" aria-label="Destination pin">
+                  <b>✓</b>
+                  <span>Complete</span>
+                </div>
+                <div class="courier-pulse" id="geoCourier" aria-label="Approaching assistant">
+                  <i></i>
+                </div>
+                <div class="supply-layer" id="geoSupplyLayer"></div>
+              </div>
+            </article>
+            <article class="geo-control-card" aria-label="Dispatch telemetry">
+              <div class="panel-title">
+                <h3>Dispatch telemetry</h3>
+                <span id="geoEta">ETA pending</span>
+              </div>
+              <div class="geo-brief">
+                <span id="geoMode">Route intelligence</span>
+                <strong id="geoHeadline">Anchor this request from your device</strong>
+                <p id="geoStatus">Use phone or computer location to make the request pin live. Assistants can share their own device location when they accept a dispatch.</p>
+              </div>
+              <div class="geo-actions">
+                <button class="primary-action" id="geoLocate" type="button">Use my location</button>
+                <button class="ghost-action" id="geoWatch" type="button">Watch movement</button>
+                <button class="ghost-action" id="geoStop" type="button" hidden>Stop</button>
+              </div>
+              <div class="geo-telemetry" id="geoTelemetry"></div>
+              <div class="geo-payment-hold">
+                <span>Secure hold</span>
+                <strong id="geoHold">$140 ready</strong>
+                <small>Reserve funds before dispatch. Capture/release rules stay attached to the job.</small>
+              </div>
+            </article>
           </div>
         </section>
 

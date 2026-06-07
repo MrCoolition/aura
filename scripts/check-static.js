@@ -20,6 +20,7 @@ const requiredFiles = [
   "api/auth/logout.js",
   "api/auth/session.js",
   "api/bookings.js",
+  "api/checkout.js",
   "api/cleaning-plan.js",
   "api/feedback.js",
   "api/inventory.js",
@@ -42,7 +43,7 @@ if (missing.length) {
   process.exit(1);
 }
 
-for (const file of ["app.js", "api/admin/db-health.js", "api/admin/migrate.js", "api/ai-plan.js", "api/admin/overview.js", "api/assistants.js", "api/auth/callback.js", "api/auth-config.js", "api/auth/login.js", "api/auth/logout.js", "api/auth/session.js", "api/bookings.js", "api/cleaning-plan.js", "api/feedback.js", "api/inventory.js", "api/memory.js", "api/missions.js", "api/profile.js", "server/auth.js", "server/db.js", "server/migrate.js", "server/local-data.js", "scripts/static-server.js"]) {
+for (const file of ["app.js", "api/admin/db-health.js", "api/admin/migrate.js", "api/ai-plan.js", "api/admin/overview.js", "api/assistants.js", "api/auth/callback.js", "api/auth-config.js", "api/auth/login.js", "api/auth/logout.js", "api/auth/session.js", "api/bookings.js", "api/checkout.js", "api/cleaning-plan.js", "api/feedback.js", "api/inventory.js", "api/memory.js", "api/missions.js", "api/profile.js", "server/auth.js", "server/db.js", "server/migrate.js", "server/local-data.js", "scripts/static-server.js"]) {
   execFileSync(process.execPath, ["--check", join(root, file)], { stdio: "inherit" });
 }
 
