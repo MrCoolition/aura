@@ -402,6 +402,7 @@ let authState = {
   authenticated: false,
   user: null,
   role: "client",
+  profilePersistence: "unknown",
   authMessage: ""
 };
 let preferenceSaveTimer = null;
@@ -1092,18 +1093,26 @@ async function postJson(url, payload) {
     headers,
     body: JSON.stringify(payload)
   });
-  if (!response.ok) {
-    throw new Error(`Request failed with ${response.status}`);
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || data?.ok === false) {
+    const error = new Error(data?.message || `Request failed with ${response.status}`);
+    error.status = response.status;
+    error.data = data;
+    throw error;
   }
-  return response.json();
+  return data;
 }
 
 async function getJson(url) {
   const response = await fetch(url, { headers: await requestHeaders(false) });
-  if (!response.ok) {
-    throw new Error(`Request failed with ${response.status}`);
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || data?.ok === false) {
+    const error = new Error(data?.message || `Request failed with ${response.status}`);
+    error.status = response.status;
+    error.data = data;
+    throw error;
   }
-  return response.json();
+  return data;
 }
 
 async function requestHeaders(includeJson) {
@@ -1242,6 +1251,7 @@ function renderAuthState() {
 
   if (!signedIn) {
     authState.role = "client";
+    authState.profilePersistence = "unknown";
     renderAdminAccess(false);
     authStatus.textContent = "Guest mode";
     authGreeting.textContent = "Sign in to save preferences and bookings.";
@@ -1253,7 +1263,15 @@ function renderAuthState() {
   authName.textContent = displayName;
   authEmail.textContent = email;
   authAvatar.src = authState.user.picture || "/assets/aura-app-icon.png";
-  authStatus.textContent = authState.role === "admin" ? "Admin profile" : "Signed in";
+  if (authState.profilePersistence === "database") {
+    authStatus.textContent = authState.role === "admin" ? "Admin saved" : "Profile saved";
+  } else if (authState.profilePersistence === "local") {
+    authStatus.textContent = "Profile local";
+  } else if (authState.profilePersistence === "error") {
+    authStatus.textContent = "Save failed";
+  } else {
+    authStatus.textContent = authState.role === "admin" ? "Admin profile" : "Signed in";
+  }
   authGreeting.textContent = `${displayName.split(" ")[0] || "Your"} AURA profile is active.`;
   renderAdminAccess(authState.role === "admin");
   closeAuthPortal();
@@ -1516,8 +1534,8 @@ async function saveIntakeProfile() {
 
   intakeStatus.textContent = authState.authenticated ? "Saving profile..." : "Profile tuned locally.";
   if (authState.authenticated) {
-    await saveProfilePreferences("intake-save");
-    intakeStatus.textContent = "Profile saved to AURA.";
+    const saved = await saveProfilePreferences("intake-save", { showErrors: true });
+    if (saved) intakeStatus.textContent = "Profile saved to AURA.";
   }
 }
 
@@ -1538,16 +1556,42 @@ function preferenceSnapshot() {
   };
 }
 
-async function saveProfilePreferences(reason = "interaction") {
-  if (!authState.enabled || !authState.authenticated) return;
+function profileSaveFailureMessage(error) {
+  if (error?.data?.code === "DATABASE_NOT_CONFIGURED") {
+    return "Profile saving is not connected on this deployment yet.";
+  }
+
+  if (error?.status === 401) {
+    return "Your secure session expired. Sign in again to save.";
+  }
+
+  return "Profile could not be saved. Try again in a moment.";
+}
+
+async function saveProfilePreferences(reason = "interaction", options = {}) {
+  if (!authState.enabled || !authState.authenticated) return false;
 
   try {
-    await postJson("/api/profile", {
+    const result = await postJson("/api/profile", {
       reason,
       preferences: preferenceSnapshot()
     });
-  } catch {
-    authStatus.textContent = "Profile local";
+    if (result.mode !== "database") {
+      const error = new Error(result.message || "Profile was not persisted.");
+      error.data = result;
+      throw error;
+    }
+
+    authState.profilePersistence = "database";
+    authStatus.textContent = "Profile saved";
+    return true;
+  } catch (error) {
+    authState.profilePersistence = error?.data?.code === "DATABASE_NOT_CONFIGURED" ? "local" : "error";
+    authStatus.textContent = "Save failed";
+    if (options.showErrors && intakeStatus) {
+      intakeStatus.textContent = profileSaveFailureMessage(error);
+    }
+    return false;
   }
 }
 
@@ -1555,7 +1599,7 @@ function queuePreferenceSave(reason) {
   if (!authState.enabled || !authState.authenticated) return;
   clearTimeout(preferenceSaveTimer);
   preferenceSaveTimer = setTimeout(() => {
-    saveProfilePreferences(reason);
+    saveProfilePreferences(reason, { showErrors: false });
   }, 700);
 }
 
@@ -1603,18 +1647,30 @@ function applyProfilePreferences(preferences) {
 }
 
 async function loadProfilePreferences() {
-  if (!authState.enabled || !authState.authenticated) return;
+  if (!authState.enabled || !authState.authenticated) return false;
 
   try {
     const result = await getJson("/api/profile");
+    if (result.mode !== "database") {
+      authState.profilePersistence = "local";
+      authStatus.textContent = "Profile local";
+      intakeStatus.textContent = "Profile saving is not connected on this deployment yet.";
+      return false;
+    }
+
+    authState.profilePersistence = "database";
     authState.role = result.data?.user?.role || "client";
     renderAuthState();
     applyProfilePreferences(result.data?.preferences);
     if (authState.role === "admin") {
       await loadAdminOverview();
     }
+    return true;
   } catch {
+    authState.profilePersistence = "local";
     authStatus.textContent = "Profile local";
+    intakeStatus.textContent = "Saved profile could not load yet.";
+    return false;
   }
 }
 
@@ -1787,7 +1843,6 @@ async function initAuth() {
       authState.user = session.data.user;
       renderAuthState();
       await loadProfilePreferences();
-      queuePreferenceSave("auth-login");
     }
 
     authState.ready = true;

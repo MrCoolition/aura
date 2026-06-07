@@ -89,7 +89,16 @@ export async function POST(request) {
   const sql = await getSql();
 
   if (!sql) {
-    return json(missingDatabasePayload("profile", { user: auth.user, preferences }));
+    return json(
+      {
+        ok: false,
+        mode: "local",
+        code: "DATABASE_NOT_CONFIGURED",
+        message: "Profile saving is not connected on this deployment.",
+        data: { user: auth.user }
+      },
+      503
+    );
   }
 
   const auraUser = await upsertAuraUser(sql, auth.user);
