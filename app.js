@@ -1561,6 +1561,26 @@ function profileSaveFailureMessage(error) {
     return "Profile saving is not connected on this deployment yet.";
   }
 
+  if (error?.data?.code === "SCHEMA_NOT_INSTALLED") {
+    return "Database is connected, but the AURA tables are not installed yet.";
+  }
+
+  if (error?.data?.code === "DATABASE_AUTH_FAILED") {
+    return "Database credentials were rejected. Check the Neon connection string.";
+  }
+
+  if (error?.data?.code === "DATABASE_NOT_FOUND") {
+    return "Database URL points to a database that does not exist.";
+  }
+
+  if (error?.data?.code === "DATABASE_CONNECTION_FAILED") {
+    return "Database connection failed from this deployment.";
+  }
+
+  if (error?.data?.code === "DATABASE_PERMISSION_DENIED") {
+    return "Database rejected this profile write.";
+  }
+
   if (error?.status === 401) {
     return "Your secure session expired. Sign in again to save.";
   }
@@ -1666,10 +1686,10 @@ async function loadProfilePreferences() {
       await loadAdminOverview();
     }
     return true;
-  } catch {
-    authState.profilePersistence = "local";
+  } catch (error) {
+    authState.profilePersistence = error?.data?.code === "DATABASE_NOT_CONFIGURED" ? "local" : "error";
     authStatus.textContent = "Profile local";
-    intakeStatus.textContent = "Saved profile could not load yet.";
+    intakeStatus.textContent = profileSaveFailureMessage(error);
     return false;
   }
 }

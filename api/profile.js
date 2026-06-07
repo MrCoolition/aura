@@ -1,5 +1,12 @@
 import { requireAuth, runWithUserContext, upsertAuraUser } from "../server/auth.js";
-import { getSql, json, missingDatabasePayload, readJson } from "../server/db.js";
+import {
+  databaseErrorPayload,
+  databaseErrorStatus,
+  getSql,
+  json,
+  missingDatabasePayload,
+  readJson
+} from "../server/db.js";
 
 const defaultPreferences = {
   mode: "hire",
@@ -47,7 +54,14 @@ export async function GET(request) {
   const auth = await requireAuth(request);
   if (auth.response) return auth.response;
 
-  const sql = await getSql();
+  let sql;
+  try {
+    sql = await getSql();
+  } catch (error) {
+    const payload = databaseErrorPayload(error, "profile");
+    return json(payload, databaseErrorStatus(payload.code));
+  }
+
   if (!sql) {
     return json(
       missingDatabasePayload("profile", {
@@ -57,15 +71,22 @@ export async function GET(request) {
     );
   }
 
-  const auraUser = await upsertAuraUser(sql, auth.user);
-  const [rows] = await runWithUserContext(sql, auraUser, [
-    sql`
-      select preferences
-      from user_preferences
-      where user_id = ${auraUser.id} and namespace = 'aura'
-      limit 1
-    `
-  ]);
+  let auraUser;
+  let rows;
+  try {
+    auraUser = await upsertAuraUser(sql, auth.user);
+    [rows] = await runWithUserContext(sql, auraUser, [
+      sql`
+        select preferences
+        from user_preferences
+        where user_id = ${auraUser.id} and namespace = 'aura'
+        limit 1
+      `
+    ]);
+  } catch (error) {
+    const payload = databaseErrorPayload(error, "profile");
+    return json(payload, databaseErrorStatus(payload.code));
+  }
 
   return json({
     ok: true,
@@ -86,7 +107,13 @@ export async function POST(request) {
     ...defaultPreferences,
     ...(typeof body.preferences === "object" && body.preferences ? body.preferences : {})
   };
-  const sql = await getSql();
+  let sql;
+  try {
+    sql = await getSql();
+  } catch (error) {
+    const payload = databaseErrorPayload(error, "profile");
+    return json(payload, databaseErrorStatus(payload.code));
+  }
 
   if (!sql) {
     return json(
@@ -101,25 +128,32 @@ export async function POST(request) {
     );
   }
 
-  const auraUser = await upsertAuraUser(sql, auth.user);
-  const [rows] = await runWithUserContext(sql, auraUser, [
-    sql`
-      insert into user_preferences (
-        user_id,
-        namespace,
-        preferences
-      )
-      values (
-        ${auraUser.id},
-        'aura',
-        ${JSON.stringify(preferences)}::jsonb
-      )
-      on conflict (user_id, namespace) do update set
-        preferences = excluded.preferences,
-        updated_at = now()
-      returning id, namespace, preferences, updated_at
-    `
-  ]);
+  let auraUser;
+  let rows;
+  try {
+    auraUser = await upsertAuraUser(sql, auth.user);
+    [rows] = await runWithUserContext(sql, auraUser, [
+      sql`
+        insert into user_preferences (
+          user_id,
+          namespace,
+          preferences
+        )
+        values (
+          ${auraUser.id},
+          'aura',
+          ${JSON.stringify(preferences)}::jsonb
+        )
+        on conflict (user_id, namespace) do update set
+          preferences = excluded.preferences,
+          updated_at = now()
+        returning id, namespace, preferences, updated_at
+      `
+    ]);
+  } catch (error) {
+    const payload = databaseErrorPayload(error, "profile");
+    return json(payload, databaseErrorStatus(payload.code));
+  }
 
   return json({ ok: true, mode: "database", data: { user: auraUser, preferences: rows[0].preferences } });
 }
