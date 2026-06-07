@@ -42,7 +42,7 @@ const defaultPreferences = {
   cleanprint: {
     level: "reset",
     priority: "detail",
-    rooms: ["kitchen", "primary-bath", "living", "entry"]
+    rooms: ["bathrooms", "kitchens", "living-areas", "sleeping-areas"]
   },
   market: ""
 };

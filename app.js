@@ -23,131 +23,146 @@ const calendarInsights = [
 
 const checklists = [
   {
-    title: "Hotel-level home reset",
-    items: ["Clear surfaces", "Fresh towels", "Restock drinks", "Scent check", "Photo proof"]
+    title: "Aura-Clean bathrooms",
+    items: ["Sanitize wet areas", "Shine chrome", "Toilet detail", "Dust ledges", "Rotation grout pass"]
   },
   {
-    title: "Errand route",
-    items: ["Confirm stops", "Optimize route", "Send pickup photos", "Track receipts", "Final drop"]
+    title: "Aura-Clean kitchens",
+    items: ["Sanitize counters", "Clean range", "Shine sink", "Mop floors", "Rotation cabinet fronts"]
   },
   {
-    title: "Travel ready",
-    items: ["Flight options", "Packing list", "Car timing", "Dining hold", "Weather note"]
+    title: "Aura-Clean living + sleeping",
+    items: ["Hand wipe flats", "Dust frames and fans", "Vacuum accessible floors", "Rotation baseboards", "Upholstery pass"]
   }
 ];
 
 const cleaningRooms = [
   {
-    id: "kitchen",
-    name: "Kitchen",
-    zone: "Food + surfaces",
-    minutes: 34,
-    proof: 3,
+    id: "bathrooms",
+    name: "Bathrooms",
+    zone: "Sanitize + shine",
+    minutes: 46,
+    proof: 5,
     tasks: [
-      "Clear counters and stage items by use",
-      "Sanitize sink, faucet, handles, and backsplash",
-      "Wipe appliances, cabinet touchpoints, and cooktop",
-      "Reset fridge front and remove expired visible items",
-      "Restock paper goods and preferred water"
+      "Tile walls, bathtubs, and showers cleaned and sanitized",
+      "Shower doors cleaned and sanitized",
+      "Vanity and sink cleaned and sanitized",
+      "Mirrors and chrome fixtures cleaned and shined",
+      "Floors cleaned or carpets vacuumed",
+      "Toilets thoroughly cleaned",
+      "Window sills, ledges, and blinds dusted",
+      "Cobwebs removed",
+      "Doors and door frames spot cleaned",
+      "General dusting"
     ],
-    deepAdds: ["Degrease hood and cabinet edges", "Detail inside microwave and drawer pulls"],
-    turnoverAdds: ["Stage coffee, glasses, and guest snack zone"]
+    rotationAdds: [
+      "Tile grouting scrubbed",
+      "Shower door given extra attention",
+      "Doors and door frames hand wiped",
+      "Knickknacks individually cleaned",
+      "Fronts of cabinets hand wiped",
+      "Baseboards and window sills hand wiped",
+      "Floors given extra attention",
+      "Faucets, sinks, and drains cleaned with a toothbrush"
+    ]
   },
   {
-    id: "primary-bath",
-    name: "Primary bath",
-    zone: "Spa standard",
-    minutes: 28,
-    proof: 3,
+    id: "kitchens",
+    name: "Kitchens",
+    zone: "Food-safe reset",
+    minutes: 52,
+    proof: 5,
     tasks: [
-      "Disinfect vanity, sink, faucet, and mirror",
-      "Scrub shower glass, fixtures, and drain line",
-      "Clean toilet exterior, seat, base, and floor edge",
-      "Replace towels with saved fold standard",
-      "Confirm scent, tissue, soap, and guest-ready counter"
+      "Counter tops cleaned and sanitized",
+      "Outside of range hood cleaned and sanitized",
+      "Top and front of range cleaned",
+      "Drip pans or glass top surfaces wiped",
+      "Sinks cleaned and sanitized and chrome shined",
+      "Fronts of all appliances cleaned",
+      "Floors vacuumed and damp mopped",
+      "Window sills, ledges, and blinds dusted",
+      "Cobwebs removed",
+      "Microwave wiped out",
+      "Doors and door frames spot cleaned",
+      "General dusting"
     ],
-    deepAdds: ["Descale shower head and detail grout lines", "Polish metal fixtures to reflection check"],
-    turnoverAdds: ["Stage fresh hand towels and sealed guest amenities"]
+    rotationAdds: [
+      "Inside of range hood cleaned",
+      "Drip pans or glass top surfaces cleaned",
+      "Doors and door frames hand wiped",
+      "Appliances cleaned and shined",
+      "Knickknack areas cleaned",
+      "Fronts of cabinets hand wiped",
+      "Baseboards and window sills hand wiped",
+      "Floors given extra attention",
+      "All kitchen furniture hand wiped"
+    ]
   },
   {
-    id: "guest-bath",
-    name: "Guest bath",
-    zone: "Arrival impression",
-    minutes: 22,
-    proof: 3,
+    id: "living-areas",
+    name: "Living Areas",
+    zone: "Shared-space reset",
+    minutes: 44,
+    proof: 4,
     tasks: [
-      "Disinfect sink, faucet, mirror, and counter",
-      "Clean toilet and floor perimeter",
-      "Replace towels and align hand soap",
-      "Restock tissue and visible guest supplies",
-      "Final scent and dry-floor check"
+      "Flat areas hand wiped and sanitized",
+      "Doors and door frames spot cleaned",
+      "Cobwebs removed",
+      "Picture frames dusted",
+      "Ceiling fans dusted",
+      "Lamp shades dusted",
+      "Intricate items dusted",
+      "Heavy knickknack areas dusted",
+      "Window sills, ledges, and blinds dusted",
+      "Hard surfaced floors vacuumed and damp mopped",
+      "Stairs vacuumed",
+      "Empty closet floors vacuumed",
+      "All readily accessible floors vacuumed"
     ],
-    deepAdds: ["Detail grout corners and vent face", "Polish fixtures and baseboards"],
-    turnoverAdds: ["Set guest towel stack and visible amenity tray"]
+    rotationAdds: [
+      "Doors and door frames hand wiped",
+      "Window sills and ledges hand wiped",
+      "Knickknacks individually cleaned",
+      "Furniture surfaces hand wiped",
+      "Baseboards hand wiped",
+      "Furniture and upholstery vacuumed",
+      "Carpet edges vacuumed",
+      "Floors given extra attention",
+      "Accessible areas under furniture vacuumed"
+    ]
   },
   {
-    id: "living",
-    name: "Living room",
-    zone: "Visual reset",
-    minutes: 24,
-    proof: 2,
+    id: "sleeping-areas",
+    name: "Sleeping Areas",
+    zone: "Rest-space reset",
+    minutes: 42,
+    proof: 4,
     tasks: [
-      "Clear surfaces and return objects to memory map",
-      "Dust tables, media console, lamps, and frames",
-      "Reset pillows, throws, remotes, and charging areas",
-      "Vacuum traffic paths and under visible furniture",
-      "Final room photo from entry angle"
+      "Flat areas hand wiped and sanitized",
+      "Doors and door frames spot cleaned",
+      "Cobwebs removed",
+      "Picture frames dusted",
+      "Ceiling fans dusted",
+      "Lamp shades dusted",
+      "Intricate items dusted",
+      "Heavy knickknack areas dusted",
+      "Window sills, ledges, and blinds dusted",
+      "Hard surfaced floors vacuumed and damp mopped",
+      "Stairs vacuumed",
+      "Empty closet floors vacuumed",
+      "All readily accessible floors vacuumed"
     ],
-    deepAdds: ["Detail baseboards and under cushions", "Spot clean glass and high-touch edges"],
-    turnoverAdds: ["Stage room for first-view guest impression"]
-  },
-  {
-    id: "bedroom",
-    name: "Bedroom",
-    zone: "Rest standard",
-    minutes: 30,
-    proof: 2,
-    tasks: [
-      "Make bed to hotel fold standard",
-      "Clear nightstands and align charging items",
-      "Dust surfaces, lamps, mirror, and visible shelves",
-      "Reset laundry, hamper, and wardrobe overflow",
-      "Vacuum floor and confirm calm-room finish"
-    ],
-    deepAdds: ["Rotate detail pass under bed edge", "Wipe closet handles and drawer faces"],
-    turnoverAdds: ["Change linens and stage guest sleep setup"]
-  },
-  {
-    id: "entry",
-    name: "Entry",
-    zone: "First 10 seconds",
-    minutes: 16,
-    proof: 2,
-    tasks: [
-      "Clear shoes, bags, mail, and visual clutter",
-      "Wipe console, door handles, and switch plates",
-      "Reset keys, tray, scent, and arrival surface",
-      "Vacuum or mop entry path",
-      "Photo proof from door swing angle"
-    ],
-    deepAdds: ["Detail threshold, baseboard, and door scuffs"],
-    turnoverAdds: ["Stage welcome tray or guest access note"]
-  },
-  {
-    id: "laundry",
-    name: "Laundry",
-    zone: "Utility flow",
-    minutes: 20,
-    proof: 2,
-    tasks: [
-      "Sort visible laundry by client preference",
-      "Wipe machines, folding surface, and lint area",
-      "Restock detergent, pods, dryer sheets, and bags",
-      "Fold or stage completed items",
-      "Flag damaged, delicate, or unknown garments"
-    ],
-    deepAdds: ["Clean lint trap housing and machine gasket", "Detail storage shelf and floor corners"],
-    turnoverAdds: ["Run guest towel and sheet readiness check"]
+    rotationAdds: [
+      "Doors and door frames hand wiped",
+      "Window sills and ledges hand wiped",
+      "Knickknacks individually cleaned",
+      "Furniture surfaces hand wiped",
+      "Baseboards hand wiped",
+      "Furniture and upholstery vacuumed",
+      "Carpet edges vacuumed",
+      "Floors given extra attention",
+      "Accessible areas under furniture vacuumed"
+    ]
   }
 ];
 
@@ -330,6 +345,10 @@ const intakeModeButtons = document.querySelectorAll("[data-intake-mode-button]")
 const intakeRailTitle = document.querySelector("#intakeRailTitle");
 const intakeCompleteness = document.querySelector("#intakeCompleteness");
 const intakeProgress = document.querySelector("#intakeProgress");
+const dnaMarket = document.querySelector("#dnaMarket");
+const dnaServices = document.querySelector("#dnaServices");
+const dnaMemory = document.querySelector("#dnaMemory");
+const dnaGuardrails = document.querySelector("#dnaGuardrails");
 const intakeStatus = document.querySelector("#intakeStatus");
 const clientIntake = document.querySelector("#clientIntake");
 const assistantIntake = document.querySelector("#assistantIntake");
@@ -640,6 +659,118 @@ function renderReactor(service) {
     .join("");
 }
 
+function reactorContextPayload() {
+  const { total, fee, payout } = quoteState();
+  return {
+    task: taskInput.value,
+    service: selectedService(),
+    urgency: timeSelect.value,
+    market: currentMarket(),
+    budget: { total, fee, payout },
+    intake: intakeSnapshot(),
+    cleaningPlan: cleaningPlanPayload()
+  };
+}
+
+function renderProofstreamItems(items) {
+  proofstream.innerHTML = items
+    .map(
+      (item, index) => `
+        <label class="proof-row">
+          <span>${escapeHtml(item)}</span>
+          <input type="checkbox" ${index < 2 ? "checked" : ""}>
+        </label>
+      `
+    )
+    .join("");
+  updateProofScore();
+}
+
+function applyAiReactorPlan(plan) {
+  if (!plan || typeof plan !== "object") return;
+  const atoms = Array.isArray(plan.atoms) ? plan.atoms : [];
+  const kpis = Array.isArray(plan.kpis) ? plan.kpis : [];
+  const steps = Array.isArray(plan.steps) ? plan.steps : [];
+
+  reactorMode.textContent = "AI Home Reactor";
+  reactorHeadline.textContent = plan.headline || "AURA built an AI operations plan";
+  reactorSummary.textContent = plan.summary || "AURA converted the request into dispatch-ready work.";
+  reactorValueBadge.textContent = "AI plan";
+
+  if (kpis.length) {
+    reactorKpis.innerHTML = kpis
+      .slice(0, 4)
+      .map(
+        (kpi) => `
+          <div>
+            <span>${escapeHtml(kpi.label)}</span>
+            <strong>${escapeHtml(kpi.value)}</strong>
+          </div>
+        `
+      )
+      .join("");
+  }
+
+  if (steps.length) {
+    opsFlow.innerHTML = steps
+      .slice(0, 4)
+      .map(
+        (step, index) => `
+          <div class="ops-step">
+            <b>${index + 1}</b>
+            <strong>${escapeHtml(step.label)}</strong>
+            <span>${escapeHtml(step.value)}</span>
+            <small>${escapeHtml(step.detail)}</small>
+          </div>
+        `
+      )
+      .join("");
+  }
+
+  if (atoms.length) {
+    const average = Math.round(atoms.reduce((sum, atom) => sum + Number(atom.score || 0), 0) / atoms.length);
+    matchHeat.textContent = average;
+    intentAtoms.innerHTML = atoms
+      .slice(0, 6)
+      .map(
+        (atom) => `
+          <div class="atom-card">
+            <span>${escapeHtml(atom.label)}</span>
+            <strong>${Math.max(0, Math.min(100, Number(atom.score || 0)))}</strong>
+            <span>${escapeHtml(atom.detail)}</span>
+          </div>
+        `
+      )
+      .join("");
+  }
+
+  if (Array.isArray(plan.proofstream) && plan.proofstream.length) {
+    renderProofstreamItems(plan.proofstream.slice(0, 6));
+  }
+}
+
+async function runAiOpsPlan() {
+  if (!(await ensureSignedIn("AI Ops Architect"))) return;
+
+  const button = document.querySelector("#optimizeDay");
+  button.disabled = true;
+  bookingStatus.textContent = "AURA AI is building a dispatch-ready operations plan...";
+
+  try {
+    const result = await postJson("/api/ai-plan", reactorContextPayload());
+    applyAiReactorPlan(result.data);
+    bookingStatus.textContent = "AI Ops Architect updated Home Reactor with a dispatch-ready plan.";
+    document.querySelector("#booking-engine").scrollIntoView({ behavior: "smooth" });
+  } catch (error) {
+    bookingStatus.textContent =
+      error?.data?.code === "OPENAI_NOT_CONFIGURED"
+        ? "OPEN_AI_API is not available to this deployment yet."
+        : "AURA AI could not build the plan yet. The local reactor remains ready.";
+  } finally {
+    button.disabled = false;
+  }
+}
+
 function renderMatchLattice(service) {
   if (!assistantSupply.length) {
     latticeWinner.textContent = "Supply pending";
@@ -731,22 +862,40 @@ function renderChecklists() {
 
 function levelLabel(level) {
   return {
-    reset: "Reset",
-    deep: "Deep",
-    turnover: "Turnover"
-  }[level] || "Reset";
+    reset: "Normal clean",
+    deep: "Rotation clean",
+    turnover: "First two detailed cleans"
+  }[level] || "Normal clean";
 }
 
 function selectedCleaningRooms() {
   return Array.from(roomChipGrid.querySelectorAll(".room-chip.is-selected")).map((button) => button.dataset.room);
 }
 
+function normalizeCleaningZones(values = []) {
+  const legacy = {
+    kitchen: "kitchens",
+    "primary-bath": "bathrooms",
+    "guest-bath": "bathrooms",
+    living: "living-areas",
+    entry: "living-areas",
+    bedroom: "sleeping-areas",
+    laundry: "sleeping-areas"
+  };
+  return [...new Set(values.map((value) => legacy[value] || value))];
+}
+
 function roomTasksFor(room, level, priority) {
-  const tasks = [...room.tasks];
-  if (level === "deep") tasks.push(...room.deepAdds);
-  if (level === "turnover") tasks.push(...room.turnoverAdds);
-  if (priority === "photo") tasks.push("Capture extra proof sweep from room entry and detail angle");
-  if (priority === "speed") tasks.unshift("Start with visible-impact surfaces before detail pass");
+  const normalTasks = room.tasks.map((label) => ({ label, type: "Normal" }));
+  const rotationTasks = level === "deep" || level === "turnover"
+    ? room.rotationAdds.map((label) => ({ label, type: "Rotation" }))
+    : [];
+  const tasks = [...normalTasks, ...rotationTasks];
+  if (level === "turnover") {
+    tasks.unshift({ label: "First-two-cleans detail baseline: confirm every normal and rotation task before moving zones", type: "Detail" });
+  }
+  if (priority === "photo") tasks.push({ label: "Capture extra proof sweep from zone entry and detail angle", type: "Proof" });
+  if (priority === "speed") tasks.unshift({ label: "Start with visible-impact surfaces before detail pass", type: "Route" });
   return tasks;
 }
 
@@ -764,20 +913,20 @@ function buildCleaningPlan() {
         ...room,
         tasks,
         estimate: Math.max(12, Math.round(room.minutes * multiplier + priorityMinutes)),
-        proofCount: room.proof + (priority === "photo" ? 2 : level === "turnover" ? 1 : 0)
+        proofCount: room.proof + (priority === "photo" ? 2 : level === "turnover" ? 2 : level === "deep" ? 1 : 0)
       };
     });
   return { level, priority, rooms };
 }
 
 function renderRoomBuilder() {
-  const defaultRooms = new Set(["kitchen", "primary-bath", "living", "entry"]);
+  const defaultRooms = new Set(["bathrooms", "kitchens", "living-areas", "sleeping-areas"]);
   roomChipGrid.innerHTML = cleaningRooms
     .map(
       (room) => `
         <button class="room-chip ${defaultRooms.has(room.id) ? "is-selected" : ""}" data-room="${room.id}" type="button">
           <strong>${room.name}</strong>
-          <span>${room.zone}</span>
+          <span>${room.zone} / ${room.rotationAdds.length} rotation adds</span>
         </button>
       `
     )
@@ -791,8 +940,8 @@ function renderRoomPlan() {
   if (!plan.rooms.length) {
     roomPlan.innerHTML = `
       <article class="room-plan-empty">
-        <strong>Select at least one room</strong>
-        <span>AURA needs rooms before it can build the Cleanprint.</span>
+        <strong>Select at least one Aura-Clean zone</strong>
+        <span>AURA needs zones before it can build the rotation map.</span>
       </article>
     `;
     cleanRoomCount.textContent = "0";
@@ -831,7 +980,7 @@ function renderRoomPlan() {
                 (task, taskIndex) => `
                   <label class="room-task">
                     <input type="checkbox" data-room-card="${roomIndex}" data-task="${taskIndex}">
-                    <span>${task}</span>
+                    <span><b>${escapeHtml(task.type)}</b>${escapeHtml(task.label)}</span>
                   </label>
                 `
               )
@@ -842,7 +991,7 @@ function renderRoomPlan() {
     )
     .join("");
 
-  taskInput.value = `Build a ${levelLabel(plan.level).toLowerCase()} Cleanprint for ${plan.rooms.map((room) => room.name).join(", ")} with ${totalTasks} tasks, ${totalProof} proof points, and a ${totalMinutes} minute estimate.`;
+  taskInput.value = `Build an Aura-Clean ${levelLabel(plan.level).toLowerCase()} for ${plan.rooms.map((room) => room.name).join(", ")} with ${totalTasks} tasks, ${totalProof} proof points, and a ${totalMinutes} minute estimate.`;
   updateQuote();
 }
 
@@ -876,9 +1025,10 @@ function cleaningPlanPayload() {
       estimatedMinutes: room.estimate,
       proofCount: room.proofCount,
       tasks: room.tasks.map((label, taskPosition) => ({
-        label,
+        label: typeof label === "string" ? label : label.label,
+        type: typeof label === "string" ? "Normal" : label.type,
         position: taskPosition + 1,
-        requiresPhoto: /photo|proof|receipt|final|entry|mirror|before|after/i.test(label)
+        requiresPhoto: /photo|proof|receipt|final|entry|mirror|before|after|shine|sanitized/i.test(typeof label === "string" ? label : label.label)
       }))
     }))
   };
@@ -889,22 +1039,22 @@ async function saveCleanprint() {
   const payload = cleaningPlanPayload();
 
   if (!payload.rooms.length) {
-    cleanprintStatus.textContent = "Select at least one room before building the Cleanprint.";
+    cleanprintStatus.textContent = "Select at least one Aura-Clean zone before building the rotation map.";
     return;
   }
 
-  if (!(await ensureSignedIn("Building Cleanprint"))) return;
+  if (!(await ensureSignedIn("Building Aura-Clean"))) return;
 
   buildCleanprint.disabled = true;
-  cleanprintStatus.textContent = "Building room map, proof stream, and assistant handoff...";
+  cleanprintStatus.textContent = "Building Aura-Clean zone map, proof stream, and assistant handoff...";
 
   try {
     const result = await postJson("/api/cleaning-plan", payload);
     const modeCopy = result.mode === "database" ? "saved" : "built";
-    cleanprintStatus.textContent = `Cleanprint ${modeCopy}: ${payload.roomCount} rooms, ${payload.taskCount} tasks, ${payload.proofCount} proof points.`;
-    bookingStatus.textContent = `Cleanprint ready: ${payload.taskCount} room tasks and ${payload.estimatedMinutes} minutes packaged for dispatch.`;
+    cleanprintStatus.textContent = `Aura-Clean ${modeCopy}: ${payload.roomCount} zones, ${payload.taskCount} tasks, ${payload.proofCount} proof points.`;
+    bookingStatus.textContent = `Aura-Clean ready: ${payload.taskCount} zone tasks and ${payload.estimatedMinutes} minutes packaged for dispatch.`;
   } catch {
-    cleanprintStatus.textContent = "Cleanprint built locally. Sign in to save and manage room plans.";
+    cleanprintStatus.textContent = "Aura-Clean built locally. Sign in to save and manage rotation plans.";
   } finally {
     buildCleanprint.disabled = false;
   }
@@ -1437,6 +1587,12 @@ function updateIntakeCounts(profile = intakeSnapshot()) {
   assistantAvailabilityCount.textContent = countLabel(profile.assistant.availability.length, "window");
 }
 
+function setDnaSignal(element, value, level) {
+  if (!element) return;
+  element.textContent = value;
+  element.parentElement?.style.setProperty("--level", `${Math.max(0, Math.min(100, level))}%`);
+}
+
 function renderIntakeLiveCard(profile = intakeSnapshot()) {
   const mode = profile.mode === "assistant" ? "assistant" : "client";
   const data = profile[mode];
@@ -1445,8 +1601,12 @@ function renderIntakeLiveCard(profile = intakeSnapshot()) {
   intakeCompleteness.textContent = `${score}%`;
   intakeProgress.style.width = `${score}%`;
   intakeLiveMode.textContent = mode === "assistant" ? "Earn" : "Hire";
+  setDnaSignal(dnaMarket, market === "Your market" ? "Open" : market, market === "Your market" ? 24 : 100);
+  setDnaSignal(dnaServices, `${data.services.length}`, Math.min(100, data.services.length * 22));
 
   if (mode === "assistant") {
+    setDnaSignal(dnaMemory, `${data.strengths.length}`, Math.min(100, data.strengths.length * 24));
+    setDnaSignal(dnaGuardrails, `${data.filters.length}`, Math.min(100, data.filters.length * 34));
     intakeLiveTitle.textContent = `${market} operator, ${data.radius}`;
     intakeLiveBody.textContent = `${data.payoutStrategy} with ${data.services.slice(0, 3).join(", ") || "flexible service"} focus.`;
     intakeLiveMetrics.innerHTML = [
@@ -1462,6 +1622,8 @@ function renderIntakeLiveCard(profile = intakeSnapshot()) {
     return;
   }
 
+  setDnaSignal(dnaMemory, `${data.preferences.length}`, Math.min(100, data.preferences.length * 22));
+  setDnaSignal(dnaGuardrails, `${data.boundaries.length}`, Math.min(100, data.boundaries.length * 34));
   intakeLiveTitle.textContent = `${market} ${data.homeType.toLowerCase()}, ${data.cadence.toLowerCase()}`;
   intakeLiveBody.textContent = `${data.services.slice(0, 4).join(", ") || "Flexible support"} with ${data.proof.toLowerCase()} and ${data.access.toLowerCase()}.`;
   intakeLiveMetrics.innerHTML = [
@@ -1566,11 +1728,11 @@ function profileSaveFailureMessage(error) {
   }
 
   if (error?.data?.code === "SCHEMA_INSTALL_FAILED") {
-    return "AURA tried to install the database tables, but Neon rejected the schema install.";
+    return "AURA tried to prepare secure profile storage, but setup did not complete.";
   }
 
   if (error?.data?.code === "DATABASE_AUTH_FAILED") {
-    return "Database credentials were rejected. Check the Neon connection string.";
+    return "Secure profile storage rejected this write. Check the saved connection settings.";
   }
 
   if (error?.data?.code === "DATABASE_NOT_FOUND") {
@@ -1659,7 +1821,7 @@ function applyProfilePreferences(preferences) {
     if (preferences.cleanprint.level) cleaningLevel.value = preferences.cleanprint.level;
     if (preferences.cleanprint.priority) cleaningPriority.value = preferences.cleanprint.priority;
     if (Array.isArray(preferences.cleanprint.rooms)) {
-      const selected = new Set(preferences.cleanprint.rooms);
+      const selected = new Set(normalizeCleaningZones(preferences.cleanprint.rooms));
       roomChipGrid.querySelectorAll(".room-chip").forEach((chip) => {
         chip.classList.toggle("is-selected", selected.has(chip.dataset.room));
       });
@@ -1729,7 +1891,7 @@ function renderAdminOverview(data) {
   adminStats.innerHTML = [
     ["Users", totals.users || 0],
     ["Requests", totals.service_requests || 0],
-    ["Cleanprints", totals.cleanprints || 0],
+    ["Aura-Clean", totals.cleanprints || 0],
     ["Inventory scans", totals.inventory_scans || 0],
     ["Feedback", totals.feedback_events || 0],
     ["Secure tables", `${security.rls_forced || 0}/${security.protected_tables || 0}`]
@@ -2029,10 +2191,7 @@ document.querySelector("#bookRequest").addEventListener("click", async () => {
   }
 });
 
-document.querySelector("#optimizeDay").addEventListener("click", () => {
-  document.querySelector("#calendar").scrollIntoView({ behavior: "smooth" });
-  bookingStatus.textContent = "AURA found 3 calendar improvements and one profitable task bundle.";
-});
+document.querySelector("#optimizeDay").addEventListener("click", runAiOpsPlan);
 
 assistantList.addEventListener("click", (event) => {
   const profileJump = event.target.closest("[data-jump-profile]");

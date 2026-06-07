@@ -154,7 +154,7 @@ export async function POST(request) {
     ok: true,
     mode: "database",
     data: { ...planRows[0], rooms },
-    message: "Cleanprint saved. AURA can dispatch the room plan with proof requirements."
+    message: "Aura-Clean plan saved. AURA can dispatch the zone plan with proof requirements."
   });
 }
 

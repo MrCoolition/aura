@@ -94,7 +94,7 @@ values (
   10,
   102,
   'ready',
-  '{"source": "seed", "name": "Guest-ready Cleanprint"}'::jsonb
+  '{"source": "seed", "name": "Guest-ready Aura-Clean"}'::jsonb
 )
 on conflict (id) do update set
   task_count = excluded.task_count,

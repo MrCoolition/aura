@@ -50,6 +50,11 @@ async function migrationContext(request) {
 }
 
 export async function GET(request) {
+  const url = new URL(request.url);
+  if (url.searchParams.get("install") === "1") {
+    return POST(request);
+  }
+
   const context = await migrationContext(request);
   if (context.response) return context.response;
 

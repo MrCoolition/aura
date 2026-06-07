@@ -83,7 +83,7 @@
                 <b>02</b>
                 <span>
                   <strong>Home memory</strong>
-                  <small>Cleanprints, inventory, and repeat routines stay organized.</small>
+                  <small>Aura-Clean plans, inventory, and repeat routines stay organized.</small>
                 </span>
               </div>
               <div>
@@ -256,11 +256,27 @@
                 <strong id="intakeCompleteness">74%</strong>
                 <div class="progress-track" aria-hidden="true"><span class="progress-fill" id="intakeProgress"></span></div>
               </div>
-              <div class="intake-radar" aria-hidden="true">
-                <span></span>
-                <span></span>
-                <span></span>
-                <b>A</b>
+              <div class="dna-matrix" id="intakeDna" aria-label="AURA DNA signals">
+                <div class="dna-row">
+                  <span>Market</span>
+                  <strong id="dnaMarket">Open</strong>
+                  <i aria-hidden="true"></i>
+                </div>
+                <div class="dna-row">
+                  <span>Services</span>
+                  <strong id="dnaServices">0</strong>
+                  <i aria-hidden="true"></i>
+                </div>
+                <div class="dna-row">
+                  <span>Memory</span>
+                  <strong id="dnaMemory">0</strong>
+                  <i aria-hidden="true"></i>
+                </div>
+                <div class="dna-row">
+                  <span>Guardrails</span>
+                  <strong id="dnaGuardrails">0</strong>
+                  <i aria-hidden="true"></i>
+                </div>
               </div>
               <div class="intake-status" id="intakeStatus">Profile tuning is local until you save.</div>
             </aside>
@@ -555,13 +571,13 @@
 
         <section class="split-section" id="checklists" aria-labelledby="checklist-title">
           <div class="section-heading">
-            <p class="eyebrow">Cleanprint Builder</p>
-            <h2 id="checklist-title">Room-by-room cleaning lists generated like an operations map</h2>
-            <p>AURA builds a verified room plan with timing, proof points, reset standards, and assistant-ready steps.</p>
+            <p class="eyebrow">Aura-Clean Rotation</p>
+            <h2 id="checklist-title">Four-zone cleaning lists that never miss the details</h2>
+            <p>AURA turns Bathrooms, Kitchens, Living Areas, and Sleeping Areas into normal-clean tasks, rotation-clean additions, proof points, and assistant-ready timing.</p>
           </div>
-          <div class="room-builder" aria-label="Room by room cleaning builder">
+          <div class="room-builder" aria-label="Aura-Clean rotation builder">
             <div class="panel-title">
-              <h3>Rooms</h3>
+              <h3>Zones</h3>
               <span id="cleanprintIntensity">Reset</span>
             </div>
             <div class="room-chip-grid" id="roomChipGrid"></div>
@@ -569,24 +585,24 @@
               <label>
                 <span>Standard</span>
                 <select id="cleaningLevel">
-                  <option value="reset" selected>Premium reset</option>
-                  <option value="deep">Deep clean</option>
-                  <option value="turnover">Guest turnover</option>
+                  <option value="reset" selected>Normal clean</option>
+                  <option value="deep">Rotation clean</option>
+                  <option value="turnover">First two detailed cleans</option>
                 </select>
               </label>
               <label>
                 <span>Priority</span>
                 <select id="cleaningPriority">
                   <option value="speed">Fastest route</option>
-                  <option value="detail" selected>Highest detail</option>
+                  <option value="detail" selected>Balanced detail</option>
                   <option value="photo">Most proof</option>
                 </select>
               </label>
             </div>
-            <button class="primary-action" id="buildCleanprint" type="button">Build room list</button>
-            <p class="cleanprint-status" id="cleanprintStatus">Ready to generate an assistant-ready room map.</p>
+            <button class="primary-action" id="buildCleanprint" type="button">Build Aura-Clean list</button>
+            <p class="cleanprint-status" id="cleanprintStatus">Ready to generate an Aura-Clean Rotation map.</p>
             <div class="cleanprint-summary">
-              <div><strong id="cleanRoomCount">0</strong><span>rooms</span></div>
+              <div><strong id="cleanRoomCount">0</strong><span>zones</span></div>
               <div><strong id="cleanTaskCount">0</strong><span>tasks</span></div>
               <div><strong id="cleanProofCount">0</strong><span>proofs</span></div>
               <div><strong id="cleanMinutes">0m</strong><span>estimate</span></div>
@@ -714,7 +730,7 @@
           <div class="section-heading">
             <p class="eyebrow">Admin Command</p>
             <h2 id="admin-title">AURA control plane</h2>
-            <p>See users, demand, Cleanprints, inventory scans, and quality signals through AURA's secure operator view.</p>
+            <p>See users, demand, Aura-Clean plans, inventory scans, and quality signals through AURA's secure operator view.</p>
           </div>
           <div class="admin-grid">
             <article class="admin-panel admin-totals">
@@ -740,7 +756,7 @@
             </article>
             <article class="admin-panel">
               <div class="panel-title">
-                <h3>Cleanprints</h3>
+                <h3>Aura-Clean</h3>
                 <span id="adminCleanprintCount">0 plans</span>
               </div>
               <div class="admin-list" id="adminCleanprints"></div>

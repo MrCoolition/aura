@@ -111,7 +111,7 @@ export async function POST(request) {
     ok: true,
     mode: "database",
     data: rows[0],
-    message: "Booking request saved to Neon. AURA is ready to match the best assistant."
+    message: "Booking request saved. AURA is ready to match the best assistant."
   });
 }
 

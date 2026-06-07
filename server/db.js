@@ -47,7 +47,7 @@ export function databaseErrorMessage(code) {
   const messages = {
     SCHEMA_NOT_INSTALLED: "Database connected, but the AURA tables are not installed yet.",
     SCHEMA_INSTALL_FAILED: "AURA tried to install the database tables, but the schema install did not complete.",
-    DATABASE_AUTH_FAILED: "Database connection was rejected. Check the Neon connection string credentials.",
+    DATABASE_AUTH_FAILED: "Database connection was rejected. Check the saved connection credentials.",
     DATABASE_NOT_FOUND: "Database connection points to a database that does not exist.",
     DATABASE_PERMISSION_DENIED: "Database rejected this profile write.",
     DATABASE_CONNECTION_FAILED: "Database connection failed from this deployment.",
@@ -102,6 +102,6 @@ export function missingDatabasePayload(resource, data) {
     mode: "local",
     resource,
     data,
-    message: "Local fallback returned. Set DATABASE_URL on Vercel to persist this resource in Neon."
+    message: "Local fallback returned. Connect persistent storage to save this resource across sessions."
   };
 }
