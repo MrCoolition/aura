@@ -1,4 +1,4 @@
-import { demoMemoryNodes } from "../server/demo-data.js";
+import { localMemoryNodes } from "../server/local-data.js";
 import { requireAuth, runWithUserContext, upsertAuraUser } from "../server/auth.js";
 import { getSql, json, missingDatabasePayload, readJson } from "../server/db.js";
 
@@ -13,7 +13,7 @@ export async function GET(request) {
   const sql = await getSql();
 
   if (!sql) {
-    return json(missingDatabasePayload("memory_nodes", demoMemoryNodes));
+    return json(missingDatabasePayload("memory_nodes", localMemoryNodes));
   }
 
   const auraUser = await upsertAuraUser(sql, auth.user);

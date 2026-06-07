@@ -73,7 +73,7 @@ http://localhost:4173, https://aura-omega-rosy.vercel.app
 
 ## Admin + RLS
 
-Run the updated `database/schema.sql` against Neon to activate Postgres row-level security, then run `database/seed.sql` if you want demo supply. The seed script now sets an admin session context before inserting sample rows.
+Run the updated `database/schema.sql` against Neon to activate Postgres row-level security, then run `database/seed.sql` if you want local non-provider seed data. Verified assistant supply should come from real approved users.
 
 Use a Neon application role for `DATABASE_URL` that does **not** have `BYPASSRLS`. The schema enables and forces RLS across user, booking, cleaning, inventory, feedback, memory, mission, and payout tables.
 

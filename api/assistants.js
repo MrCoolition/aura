@@ -1,5 +1,4 @@
-import { demoAssistants } from "../server/demo-data.js";
-import { getSql, json, missingDatabasePayload } from "../server/db.js";
+import { getSql, json } from "../server/db.js";
 
 export async function OPTIONS() {
   return json({ ok: true });
@@ -9,7 +8,13 @@ export async function GET() {
   const sql = await getSql();
 
   if (!sql) {
-    return json(missingDatabasePayload("assistants", demoAssistants));
+    return json({
+      ok: true,
+      mode: "empty",
+      resource: "assistants",
+      data: [],
+      message: "No verified assistant supply is connected yet."
+    });
   }
 
   const assistants = await sql`
@@ -25,6 +30,11 @@ export async function GET() {
       ai_tags
     from assistant_marketplace_view
     where status = 'active'
+      and id::text not in (
+        'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+        'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+        'cccccccc-cccc-4ccc-8ccc-cccccccccccc'
+      )
     order by rating desc, completed_jobs desc
     limit 12
   `;

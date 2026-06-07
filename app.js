@@ -1,44 +1,4 @@
-const assistants = [
-  {
-    id: "marisol",
-    name: "Marisol V.",
-    initials: "MV",
-    headline: "Estate resets, hosting, pantry flow",
-    eta: 18,
-    rate: 68,
-    rating: 4.98,
-    jobs: 612,
-    acceptance: "96%",
-    tags: ["Home reset", "Events", "Inventory"],
-    bio: "Luxury hotel standards with home memory. Great for before-guests and after-party recovery."
-  },
-  {
-    id: "dante",
-    name: "Dante R.",
-    initials: "DR",
-    headline: "Calendar rescue, travel, reservations",
-    eta: 11,
-    rate: 74,
-    rating: 4.96,
-    jobs: 438,
-    acceptance: "93%",
-    tags: ["Calendar", "Travel", "Dining"],
-    bio: "Turns chaotic days into clean routes. Strong with VIP reservations and last minute changes."
-  },
-  {
-    id: "imani",
-    name: "Imani K.",
-    initials: "IK",
-    headline: "Errands, shopping, client taste profiles",
-    eta: 24,
-    rate: 62,
-    rating: 4.94,
-    jobs: 521,
-    acceptance: "98%",
-    tags: ["Errands", "Wardrobe", "Gifts"],
-    bio: "Precise, warm, and fast. Builds preference memory so repeat tasks get easier every time."
-  }
-];
+let assistantSupply = [];
 
 const serviceTemplates = {
   home: "Reset the apartment before 6 PM, restock sparkling water, prep guest towels, and move dinner reservation if traffic gets bad.",
@@ -49,7 +9,7 @@ const serviceTemplates = {
 };
 
 const timelineItems = [
-  { time: "9:20", title: "Assistant arrives", body: "Marisol gets building access and starts the home reset.", score: 98 },
+  { time: "9:20", title: "Assistant arrival window", body: "AURA confirms access, proof expectations, and the first room or stop before dispatch.", score: 98 },
   { time: "11:10", title: "Errand route", body: "Dry cleaning, package return, and grocery restock batched into one loop.", score: 94 },
   { time: "3:40", title: "Reservation watch", body: "AURA monitors traffic and moves dinner by 20 minutes if needed.", score: 91 },
   { time: "5:35", title: "Quality check", body: "Photo proof, checklist completion, and feedback prompt before wrap.", score: 96 }
@@ -269,41 +229,9 @@ const preferenceVault = [
   { label: "Errands", value: "Photo proof before checkout" }
 ];
 
-const assistantMissions = [
-  {
-    id: "mission-reset",
-    title: "Penthouse reset + restock",
-    client: "Brickell, 2.8 mi",
-    payout: 148,
-    route: 31,
-    trust: 97,
-    body: "Home reset, guest towels, sparkling water, reservation watch."
-  },
-  {
-    id: "mission-errand",
-    title: "Dry cleaning + gift run",
-    client: "Design District, 1.4 mi",
-    payout: 86,
-    route: 18,
-    trust: 91,
-    body: "Two pickups, one return, client taste profile attached."
-  },
-  {
-    id: "mission-travel",
-    title: "Travel calm pack",
-    client: "Edgewater, 3.2 mi",
-    payout: 122,
-    route: 42,
-    trust: 94,
-    body: "Packing list, car timing, dinner hold, weather note."
-  }
-];
+const assistantMissions = [];
 
-const routeLegs = [
-  { stop: "01", title: "Brickell reset", detail: "Highest trust impact, start while building access is warm", eta: "9:20" },
-  { stop: "02", title: "Market restock", detail: "Inventory list overlaps with gift route", eta: "11:05" },
-  { stop: "03", title: "Design District", detail: "Dry cleaning return and host gift in one loop", eta: "12:10" }
-];
+const routeLegs = [];
 
 const proofstreamItems = [
   "Entry condition photo",
@@ -311,6 +239,31 @@ const proofstreamItems = [
   "Guest bath final proof",
   "Client preference delta logged"
 ];
+
+const intakeDefaults = {
+  client: {
+    market: "",
+    homeType: "Condo",
+    cadence: "Weekly flow",
+    budgetStyle: "140",
+    services: ["Home reset", "Calendar", "Errands", "Inventory"],
+    preferences: ["Topo Chico glass bottles", "White towels folded thirds", "Late seating, quiet room"],
+    boundaries: ["Ask before substitutions", "Photo proof before checkout"],
+    access: "Front desk release",
+    proof: "Photo proof"
+  },
+  assistant: {
+    market: "",
+    radius: "8 miles",
+    hours: "24",
+    minimum: "85",
+    services: ["Home reset", "Errands", "Inventory", "Events"],
+    strengths: ["Hotel reset standards", "Receipt capture", "Hosting prep"],
+    filters: ["No heavy lifting", "Premium routes preferred"],
+    availability: ["Weekday mornings", "Afternoons", "Rush windows"],
+    payoutStrategy: "High trust, high payout"
+  }
+};
 
 const shell = document.querySelector(".app-shell");
 const modeButtons = document.querySelectorAll("[data-mode-button]");
@@ -322,6 +275,7 @@ const quotePrice = document.querySelector("#quotePrice");
 const assistantPayout = document.querySelector("#assistantPayout");
 const auraFee = document.querySelector("#auraFee");
 const bookingStatus = document.querySelector("#bookingStatus");
+const marketPill = document.querySelector("#marketPill");
 const assistantList = document.querySelector("#assistantList");
 const timeline = document.querySelector("#timeline");
 const calendarInsightsEl = document.querySelector("#calendarInsights");
@@ -371,6 +325,46 @@ const routeStack = document.querySelector("#routeStack");
 const proofstream = document.querySelector("#proofstream");
 const routeLift = document.querySelector("#routeLift");
 const proofScore = document.querySelector("#proofScore");
+const intakeStudio = document.querySelector("#intakeStudio");
+const intakeModeButtons = document.querySelectorAll("[data-intake-mode-button]");
+const intakeRailTitle = document.querySelector("#intakeRailTitle");
+const intakeCompleteness = document.querySelector("#intakeCompleteness");
+const intakeProgress = document.querySelector("#intakeProgress");
+const intakeStatus = document.querySelector("#intakeStatus");
+const clientIntake = document.querySelector("#clientIntake");
+const assistantIntake = document.querySelector("#assistantIntake");
+const clientMarket = document.querySelector("#clientMarket");
+const clientHomeType = document.querySelector("#clientHomeType");
+const clientCadence = document.querySelector("#clientCadence");
+const clientBudgetStyle = document.querySelector("#clientBudgetStyle");
+const clientServiceToggles = document.querySelector("#clientServiceToggles");
+const clientPreferenceChips = document.querySelector("#clientPreferenceChips");
+const clientBoundaryList = document.querySelector("#clientBoundaryList");
+const clientAccess = document.querySelector("#clientAccess");
+const clientProof = document.querySelector("#clientProof");
+const assistantMarket = document.querySelector("#assistantMarket");
+const assistantRadius = document.querySelector("#assistantRadius");
+const assistantHours = document.querySelector("#assistantHours");
+const assistantMinimum = document.querySelector("#assistantMinimum");
+const assistantServiceToggles = document.querySelector("#assistantServiceToggles");
+const assistantStrengthList = document.querySelector("#assistantStrengthList");
+const assistantFilterList = document.querySelector("#assistantFilterList");
+const assistantAvailabilityToggles = document.querySelector("#assistantAvailabilityToggles");
+const assistantPayoutStrategy = document.querySelector("#assistantPayoutStrategy");
+const clientServiceCount = document.querySelector("#clientServiceCount");
+const clientPreferenceCount = document.querySelector("#clientPreferenceCount");
+const clientBoundaryCount = document.querySelector("#clientBoundaryCount");
+const assistantServiceCount = document.querySelector("#assistantServiceCount");
+const assistantStrengthCount = document.querySelector("#assistantStrengthCount");
+const assistantFilterCount = document.querySelector("#assistantFilterCount");
+const assistantAvailabilityCount = document.querySelector("#assistantAvailabilityCount");
+const intakeLiveMode = document.querySelector("#intakeLiveMode");
+const intakeLiveTitle = document.querySelector("#intakeLiveTitle");
+const intakeLiveBody = document.querySelector("#intakeLiveBody");
+const intakeLiveMetrics = document.querySelector("#intakeLiveMetrics");
+const intakeLiveStack = document.querySelector("#intakeLiveStack");
+const saveIntake = document.querySelector("#saveIntake");
+const resetIntake = document.querySelector("#resetIntake");
 const loginButton = document.querySelector("#loginButton");
 const logoutButton = document.querySelector("#logoutButton");
 const authPortal = document.querySelector("#authPortal");
@@ -425,6 +419,10 @@ function selectedService() {
   return document.querySelector(".service-chip.is-active")?.dataset.service || "home";
 }
 
+function currentMarket() {
+  return cleanTokenValue(clientMarket?.value || assistantMarket?.value) || "Your market";
+}
+
 function quoteState() {
   const base = Number(budgetSelect.value);
   const urgency = timeSelect.value === "urgent" ? 32 : 0;
@@ -435,7 +433,8 @@ function quoteState() {
 }
 
 function topAssistant(service = selectedService()) {
-  const scored = assistants.map((assistant) => ({
+  if (!assistantSupply.length) return null;
+  const scored = assistantSupply.map((assistant) => ({
     ...assistant,
     fit:
       62 +
@@ -444,6 +443,27 @@ function topAssistant(service = selectedService()) {
       Math.max(0, 10 - Math.round(assistant.eta / 4))
   }));
   return scored.sort((a, b) => b.fit - a.fit)[0];
+}
+
+function normalizeAssistant(row) {
+  const name = String(row.display_name || row.name || "Verified assistant").trim();
+  return {
+    id: String(row.id || name),
+    name,
+    initials: name
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase(),
+    headline: String(row.headline || "Verified AURA operator").trim(),
+    eta: Number(row.eta_minutes || row.eta || 0),
+    rate: Math.round(Number(row.hourly_rate_cents || row.rate_cents || 0) / 100),
+    rating: Number(row.rating || 0),
+    jobs: Number(row.completed_jobs || row.jobs || 0),
+    tags: Array.isArray(row.ai_tags) ? row.ai_tags : Array.isArray(row.tags) ? row.tags : [],
+    bio: String(row.bio || "Profile supplied by the verified assistant network.").trim()
+  };
 }
 
 function updateQuote() {
@@ -461,6 +481,9 @@ function setMode(mode) {
   modeButtons.forEach((button) => {
     button.classList.toggle("is-active", button.dataset.modeButton === mode);
   });
+  if (intakeStudio) {
+    setIntakeMode(mode === "earn" ? "assistant" : "client", false);
+  }
   bookingStatus.textContent =
     mode === "earn"
       ? "Provider mode ready. AURA will price jobs, route your day, and protect your rating."
@@ -468,31 +491,53 @@ function setMode(mode) {
 }
 
 function renderAssistants() {
-  assistantList.innerHTML = assistants
+  if (!assistantSupply.length) {
+    assistantList.innerHTML = `
+      <article class="assistant-empty-state">
+        <strong>No verified assistants loaded yet</strong>
+        <p>Complete your market and service profile. AURA will show real approved supply when your network is connected.</p>
+        <button class="primary-action" type="button" data-jump-profile>Build profile</button>
+      </article>
+    `;
+    return;
+  }
+
+  assistantList.innerHTML = assistantSupply
     .map(
       (assistant) => `
         <article class="assistant-card">
           <div class="assistant-top">
             <div class="assistant-avatar" aria-hidden="true">${assistant.initials}</div>
             <div>
-              <h3>${assistant.name}</h3>
-              <p>${assistant.headline}</p>
+              <h3>${escapeHtml(assistant.name)}</h3>
+              <p>${escapeHtml(assistant.headline)}</p>
             </div>
           </div>
-          <p>${assistant.bio}</p>
+          <p>${escapeHtml(assistant.bio)}</p>
           <div class="tag-row">
-            ${assistant.tags.map((tag) => `<span>${tag}</span>`).join("")}
+            ${assistant.tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}
           </div>
           <div class="assistant-stats">
-            <span><strong>${assistant.eta}m</strong> ETA</span>
-            <span><strong>${assistant.rating}</strong> Rating</span>
-            <span><strong>$${assistant.rate}</strong> Hour</span>
+            <span><strong>${assistant.eta ? `${assistant.eta}m` : "Live"}</strong> ETA</span>
+            <span><strong>${assistant.rating || "New"}</strong> Rating</span>
+            <span><strong>${assistant.rate ? `$${assistant.rate}` : "Set"}</strong> Hour</span>
           </div>
-          <button class="primary-action hire-assistant" data-assistant="${assistant.id}" type="button">Book ${assistant.name.split(" ")[0]}</button>
+          <button class="primary-action hire-assistant" data-assistant="${assistant.id}" type="button">Request match</button>
         </article>
       `
     )
     .join("");
+}
+
+async function loadAssistants() {
+  try {
+    const result = await getJson("/api/assistants");
+    assistantSupply = Array.isArray(result.data) ? result.data.map(normalizeAssistant) : [];
+  } catch {
+    assistantSupply = [];
+  }
+  renderAssistants();
+  updateQuote();
 }
 
 function renderTimeline() {
@@ -532,21 +577,29 @@ function renderReactor(service) {
   const dispatchSteps = [
     { label: "Parse", value: `${atoms.length} atoms`, detail: "AURA decomposes the request" },
     { label: "Price", value: currency(total), detail: `${currency(fee)} platform revenue` },
-    { label: "Match", value: `${assistant.fit} fit`, detail: `${assistant.name}, ${assistant.eta}m ETA` },
-    { label: "Dispatch", value: currency(payout), detail: "Assistant payout with proofstream" }
+    {
+      label: "Match",
+      value: assistant ? `${assistant.fit} fit` : "Supply pending",
+      detail: assistant ? `${assistant.name}, ${assistant.eta ? `${assistant.eta}m ETA` : "live ETA"}` : "Real verified assistants appear here"
+    },
+    { label: "Dispatch", value: assistant ? currency(payout) : "Ready", detail: "Proofstream and payout rules stay attached" }
   ];
 
   reactorMode.textContent = `${serviceLabel} reactor`;
-  reactorHeadline.textContent = `${assistant.name} can execute in ${assistant.eta} minutes`;
+  reactorHeadline.textContent = assistant
+    ? `${assistant.name} can execute in ${assistant.eta ? `${assistant.eta} minutes` : "a live ETA window"}`
+    : "AURA can price the request before verified supply is loaded";
   reactorValueBadge.textContent = `${friction}h saved`;
-  reactorSummary.textContent = `AURA is turning the request into an executable operation: ${currency(total)} client total, ${currency(payout)} assistant payout, ${routeCompression}% route compression, and ${repeat}% repeat odds.`;
+  reactorSummary.textContent = assistant
+    ? `AURA is turning the request into an executable operation: ${currency(total)} client total, ${currency(payout)} assistant payout, ${routeCompression}% route compression, and ${repeat}% repeat odds.`
+    : `AURA is turning the request into priced demand: ${currency(total)} client total, ${currency(fee)} platform revenue, proofstream requirements, and a real-supply matching slot.`;
   matchHeat.textContent = average;
   frictionSaved.textContent = `${friction}h`;
   repeatOdds.textContent = `${repeat}%`;
 
   reactorKpis.innerHTML = [
-    { label: "ETA", value: `${assistant.eta}m` },
-    { label: "Assistant fit", value: assistant.fit },
+    { label: "ETA", value: assistant ? `${assistant.eta || "Live"}m` : "Pending" },
+    { label: "Assistant fit", value: assistant ? assistant.fit : "Real only" },
     { label: "AURA fee", value: currency(fee) },
     { label: "Route gain", value: `${routeCompression}%` }
   ]
@@ -587,7 +640,18 @@ function renderReactor(service) {
 }
 
 function renderMatchLattice(service) {
-  const scored = assistants
+  if (!assistantSupply.length) {
+    latticeWinner.textContent = "Supply pending";
+    matchLattice.innerHTML = `
+      <div class="lattice-empty">
+        <strong>Verified matches only</strong>
+        <span>AURA will rank real verified assistants after supply is connected for your selected market.</span>
+      </div>
+    `;
+    return;
+  }
+
+  const scored = assistantSupply
     .map((assistant) => ({
       ...assistant,
       fit:
@@ -621,7 +685,7 @@ function renderValueStack(total, fee, payout) {
   marginSignal.textContent = `${Math.round((fee / total) * 100)}% take`;
   valueStack.innerHTML = [
     { label: "Client total", value: currency(total), level: 100 },
-    { label: `${assistant.name} payout`, value: currency(payout), level: Math.round((payout / total) * 100) },
+    { label: assistant ? `${assistant.name} payout` : "Assistant payout pool", value: currency(payout), level: Math.round((payout / total) * 100) },
     { label: "AURA revenue", value: currency(fee), level: Math.round((fee / total) * 100) },
     { label: "Friction minutes erased", value: `${savedMinutes}m`, level: Math.min(100, savedMinutes / 2) },
     { label: "Route compression", value: `${routeCompression}%`, level: routeCompression }
@@ -798,7 +862,7 @@ function cleaningPlanPayload() {
   return {
     level: plan.level,
     priority: plan.priority,
-    market: "Miami",
+    market: currentMarket(),
     roomCount: plan.rooms.length,
     taskCount: totalTasks,
     proofCount: totalProof,
@@ -902,42 +966,61 @@ function renderLifeprint() {
 }
 
 function renderMissionControl() {
-  missionQueue.innerHTML = assistantMissions
-    .map(
-      (mission) => `
-        <article class="mission-card" data-mission="${mission.id}" data-payout="${mission.payout}">
-          <header>
-            <div>
-              <strong>${mission.title}</strong>
-              <span>${mission.client}</span>
-            </div>
-            <button class="tiny-action" type="button">Accept</button>
-          </header>
-          <p>${mission.body}</p>
-          <div class="mission-meta">
-            <span>${currency(mission.payout)} payout</span>
-            <span>${mission.route}m route</span>
-            <span>${mission.trust} trust</span>
-          </div>
-        </article>
-      `
-    )
-    .join("");
+  missionQueue.innerHTML = assistantMissions.length
+    ? assistantMissions
+        .map(
+          (mission) => `
+            <article class="mission-card" data-mission="${mission.id}" data-payout="${mission.payout}">
+              <header>
+                <div>
+                  <strong>${escapeHtml(mission.title)}</strong>
+                  <span>${escapeHtml(mission.client)}</span>
+                </div>
+                <button class="tiny-action" type="button">Accept</button>
+              </header>
+              <p>${escapeHtml(mission.body)}</p>
+              <div class="mission-meta">
+                <span>${currency(mission.payout)} payout</span>
+                <span>${mission.route}m route</span>
+                <span>${mission.trust} trust</span>
+              </div>
+            </article>
+          `
+        )
+        .join("")
+    : `
+      <article class="mission-empty-state">
+        <strong>No live missions loaded</strong>
+        <p>Complete the assistant intake, set your market, and connect real demand before AURA offers work.</p>
+        <button class="primary-action" type="button" data-jump-assistant-profile>Build earning profile</button>
+      </article>
+    `;
 
-  routeStack.innerHTML = routeLegs
-    .map(
-      (leg) => `
-        <div class="route-leg">
-          <b>${leg.stop}</b>
-          <div>
-            <strong>${leg.title}</strong>
-            <span>${leg.detail}</span>
-          </div>
-          <strong>${leg.eta}</strong>
+  routeStack.innerHTML = routeLegs.length
+    ? routeLegs
+        .map(
+          (leg) => `
+            <div class="route-leg">
+              <b>${leg.stop}</b>
+              <div>
+                <strong>${escapeHtml(leg.title)}</strong>
+                <span>${escapeHtml(leg.detail)}</span>
+              </div>
+              <strong>${escapeHtml(leg.eta)}</strong>
+            </div>
+          `
+        )
+        .join("")
+    : `
+      <div class="route-leg route-leg-empty">
+        <b>0</b>
+        <div>
+          <strong>Route opens when real jobs exist</strong>
+          <span>AURA will only compress actual accepted work.</span>
         </div>
-      `
-    )
-    .join("");
+        <strong>--</strong>
+      </div>
+    `;
 
   proofstream.innerHTML = proofstreamItems
     .map(
@@ -1181,13 +1264,272 @@ function renderAdminAccess(enabled) {
   adminSection.hidden = !enabled;
 }
 
+function cloneIntakeDefaults() {
+  return JSON.parse(JSON.stringify(intakeDefaults));
+}
+
+function cleanTokenValue(value) {
+  return String(value || "").replace(/\s+/g, " ").trim().slice(0, 72);
+}
+
+function tokenListValues(container) {
+  return Array.from(container?.querySelectorAll(".intake-token") || [])
+    .map((token) => cleanTokenValue(token.dataset.tokenValue))
+    .filter(Boolean);
+}
+
+function tokenMarkup(value) {
+  const safe = escapeHtml(cleanTokenValue(value));
+  return `
+    <span class="intake-token" data-token-value="${safe}">
+      <span>${safe}</span>
+      <button class="intake-token-remove" type="button" aria-label="Remove ${safe}">x</button>
+    </span>
+  `;
+}
+
+function renderTokenList(container, values = []) {
+  if (!container) return;
+  const unique = [...new Set(values.map(cleanTokenValue).filter(Boolean))];
+  container.innerHTML = unique.map(tokenMarkup).join("");
+}
+
+function addTokenFromInput(containerId, inputId) {
+  const container = document.querySelector(`#${containerId}`);
+  const input = document.querySelector(`#${inputId}`);
+  const value = cleanTokenValue(input?.value);
+  if (!container || !input || !value) return;
+  renderTokenList(container, [...tokenListValues(container), value]);
+  input.value = "";
+  updateIntakeExperience("Profile updated.");
+  queuePreferenceSave("intake-token");
+}
+
+function selectedToggleValues(container) {
+  return Array.from(container?.querySelectorAll("button.is-active") || []).map((button) => button.dataset.value);
+}
+
+function setActiveToggles(container, values = []) {
+  if (!container) return;
+  const selected = new Set(values);
+  container.querySelectorAll("button[data-value]").forEach((button) => {
+    button.classList.toggle("is-active", selected.has(button.dataset.value));
+  });
+}
+
+function setSelectValue(element, value) {
+  if (!element || value === undefined || value === null) return;
+  const stringValue = String(value);
+  const option = Array.from(element.options || []).find((item) => item.value === stringValue || item.textContent === stringValue);
+  if (option) element.value = option.value;
+}
+
+function setInputValue(element, value) {
+  if (!element || value === undefined || value === null) return;
+  element.value = String(value);
+}
+
+function activeIntakeMode() {
+  return intakeStudio?.dataset.intakeMode || "client";
+}
+
+function setIntakeMode(mode, syncAppMode = true) {
+  const normalized = mode === "assistant" ? "assistant" : "client";
+  if (!intakeStudio) return;
+  intakeStudio.dataset.intakeMode = normalized;
+  intakeModeButtons.forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.intakeModeButton === normalized);
+  });
+  clientIntake.hidden = normalized !== "client";
+  assistantIntake.hidden = normalized !== "assistant";
+  intakeRailTitle.textContent = normalized === "assistant" ? "Assistant profile" : "Client profile";
+  if (syncAppMode) setMode(normalized === "assistant" ? "earn" : "hire");
+  updateIntakeExperience();
+}
+
+function intakeSnapshot() {
+  return {
+    mode: activeIntakeMode(),
+    client: {
+      market: cleanTokenValue(clientMarket.value) || intakeDefaults.client.market,
+      homeType: clientHomeType.value,
+      cadence: clientCadence.value,
+      budgetStyle: clientBudgetStyle.value,
+      services: selectedToggleValues(clientServiceToggles),
+      preferences: tokenListValues(clientPreferenceChips),
+      boundaries: tokenListValues(clientBoundaryList),
+      access: clientAccess.value,
+      proof: clientProof.value
+    },
+    assistant: {
+      market: cleanTokenValue(assistantMarket.value) || intakeDefaults.assistant.market,
+      radius: assistantRadius.value,
+      hours: String(Math.max(0, Number(assistantHours.value || 0))),
+      minimum: String(Math.max(0, Number(assistantMinimum.value || 0))),
+      services: selectedToggleValues(assistantServiceToggles),
+      strengths: tokenListValues(assistantStrengthList),
+      filters: tokenListValues(assistantFilterList),
+      availability: selectedToggleValues(assistantAvailabilityToggles),
+      payoutStrategy: assistantPayoutStrategy.value
+    }
+  };
+}
+
+function intakeCompletion(profile = intakeSnapshot()) {
+  const mode = profile.mode === "assistant" ? "assistant" : "client";
+  const data = profile[mode];
+  const checks =
+    mode === "assistant"
+      ? [
+          data.market,
+          data.radius,
+          Number(data.hours) > 0,
+          Number(data.minimum) > 0,
+          data.services?.length,
+          data.strengths?.length,
+          data.filters?.length,
+          data.availability?.length,
+          data.payoutStrategy
+        ]
+      : [
+          data.market,
+          data.homeType,
+          data.cadence,
+          data.budgetStyle,
+          data.services?.length,
+          data.preferences?.length,
+          data.boundaries?.length,
+          data.access,
+          data.proof
+        ];
+  return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+}
+
+function countLabel(count, singular, plural = `${singular}s`) {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
+function updateIntakeCounts(profile = intakeSnapshot()) {
+  clientServiceCount.textContent = `${profile.client.services.length} active`;
+  clientPreferenceCount.textContent = countLabel(profile.client.preferences.length, "saved");
+  clientBoundaryCount.textContent = countLabel(profile.client.boundaries.length, "guardrail");
+  assistantServiceCount.textContent = `${profile.assistant.services.length} active`;
+  assistantStrengthCount.textContent = countLabel(profile.assistant.strengths.length, "signal");
+  assistantFilterCount.textContent = countLabel(profile.assistant.filters.length, "filter");
+  assistantAvailabilityCount.textContent = countLabel(profile.assistant.availability.length, "window");
+}
+
+function renderIntakeLiveCard(profile = intakeSnapshot()) {
+  const mode = profile.mode === "assistant" ? "assistant" : "client";
+  const data = profile[mode];
+  const market = cleanTokenValue(data.market) || "Your market";
+  const score = intakeCompletion(profile);
+  intakeCompleteness.textContent = `${score}%`;
+  intakeProgress.style.width = `${score}%`;
+  intakeLiveMode.textContent = mode === "assistant" ? "Earn" : "Hire";
+
+  if (mode === "assistant") {
+    intakeLiveTitle.textContent = `${market} operator, ${data.radius}`;
+    intakeLiveBody.textContent = `${data.payoutStrategy} with ${data.services.slice(0, 3).join(", ") || "flexible service"} focus.`;
+    intakeLiveMetrics.innerHTML = [
+      ["Services", data.services.length],
+      ["Hours", data.hours],
+      ["Floor", currency(Number(data.minimum || 0))]
+    ]
+      .map(([label, value]) => `<div><strong>${value}</strong><span>${label}</span></div>`)
+      .join("");
+    intakeLiveStack.innerHTML = [...data.strengths.slice(0, 4), ...data.availability.slice(0, 2)]
+      .map((item) => `<span>${escapeHtml(item)}</span>`)
+      .join("");
+    return;
+  }
+
+  intakeLiveTitle.textContent = `${market} ${data.homeType.toLowerCase()}, ${data.cadence.toLowerCase()}`;
+  intakeLiveBody.textContent = `${data.services.slice(0, 4).join(", ") || "Flexible support"} with ${data.proof.toLowerCase()} and ${data.access.toLowerCase()}.`;
+  intakeLiveMetrics.innerHTML = [
+    ["Services", data.services.length],
+    ["Taste", data.preferences.length],
+    ["Guardrails", data.boundaries.length]
+  ]
+    .map(([label, value]) => `<div><strong>${value}</strong><span>${label}</span></div>`)
+    .join("");
+  intakeLiveStack.innerHTML = [...data.preferences.slice(0, 4), ...data.boundaries.slice(0, 2)]
+    .map((item) => `<span>${escapeHtml(item)}</span>`)
+    .join("");
+}
+
+function updateIntakeExperience(message = "") {
+  const profile = intakeSnapshot();
+  updateIntakeCounts(profile);
+  renderIntakeLiveCard(profile);
+  if (marketPill) marketPill.textContent = currentMarket();
+  if (message) intakeStatus.textContent = message;
+}
+
+function applyIntakeProfile(profile = cloneIntakeDefaults()) {
+  const merged = {
+    ...cloneIntakeDefaults(),
+    ...(profile || {}),
+    client: { ...intakeDefaults.client, ...(profile?.client || {}) },
+    assistant: { ...intakeDefaults.assistant, ...(profile?.assistant || {}) }
+  };
+
+  setInputValue(clientMarket, merged.client.market);
+  setSelectValue(clientHomeType, merged.client.homeType);
+  setSelectValue(clientCadence, merged.client.cadence);
+  setSelectValue(clientBudgetStyle, merged.client.budgetStyle);
+  setActiveToggles(clientServiceToggles, merged.client.services);
+  renderTokenList(clientPreferenceChips, merged.client.preferences);
+  renderTokenList(clientBoundaryList, merged.client.boundaries);
+  setSelectValue(clientAccess, merged.client.access);
+  setSelectValue(clientProof, merged.client.proof);
+
+  setInputValue(assistantMarket, merged.assistant.market);
+  setSelectValue(assistantRadius, merged.assistant.radius);
+  setInputValue(assistantHours, merged.assistant.hours);
+  setInputValue(assistantMinimum, merged.assistant.minimum);
+  setActiveToggles(assistantServiceToggles, merged.assistant.services);
+  renderTokenList(assistantStrengthList, merged.assistant.strengths);
+  renderTokenList(assistantFilterList, merged.assistant.filters);
+  setActiveToggles(assistantAvailabilityToggles, merged.assistant.availability);
+  setSelectValue(assistantPayoutStrategy, merged.assistant.payoutStrategy);
+
+  if (budgetSelect && merged.client.budgetStyle) {
+    budgetSelect.value = merged.client.budgetStyle;
+  }
+  setIntakeMode(merged.mode || "client", false);
+  updateIntakeExperience();
+  updateQuote();
+}
+
+function renderIntakeDefaults() {
+  applyIntakeProfile(cloneIntakeDefaults());
+  intakeStatus.textContent = "Profile tuning is local until you save.";
+}
+
+async function saveIntakeProfile() {
+  if (authState.enabled && !authState.authenticated) {
+    openAuthPortal("Saving your intake profile");
+    intakeStatus.textContent = "Sign in to save this profile across devices.";
+    return;
+  }
+
+  intakeStatus.textContent = authState.authenticated ? "Saving profile..." : "Profile tuned locally.";
+  if (authState.authenticated) {
+    await saveProfilePreferences("intake-save");
+    intakeStatus.textContent = "Profile saved to AURA.";
+  }
+}
+
 function preferenceSnapshot() {
+  const intake = intakeSnapshot();
   return {
     mode: shell.dataset.mode || "hire",
     defaultService: selectedService(),
     defaultBudget: budgetSelect.value,
     defaultUrgency: timeSelect.value,
-    market: "Miami",
+    market: intake.client.market || currentMarket(),
+    intake,
     cleanprint: {
       level: cleaningLevel.value,
       priority: cleaningPriority.value,
@@ -1219,6 +1561,10 @@ function queuePreferenceSave(reason) {
 
 function applyProfilePreferences(preferences) {
   if (!preferences || typeof preferences !== "object") return;
+
+  if (preferences.intake) {
+    applyIntakeProfile(preferences.intake);
+  }
 
   if (preferences.mode) {
     setMode(preferences.mode);
@@ -1468,6 +1814,71 @@ modeButtons.forEach((button) => {
   });
 });
 
+intakeModeButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    setIntakeMode(button.dataset.intakeModeButton);
+    queuePreferenceSave("intake-mode");
+  });
+});
+
+intakeStudio.addEventListener("click", (event) => {
+  const addButton = event.target.closest("[data-add-token]");
+  if (addButton) {
+    addTokenFromInput(addButton.dataset.addToken, addButton.dataset.tokenInput);
+    return;
+  }
+
+  const removeButton = event.target.closest(".intake-token-remove");
+  if (removeButton) {
+    removeButton.closest(".intake-token")?.remove();
+    updateIntakeExperience("Profile updated.");
+    queuePreferenceSave("intake-token-remove");
+    return;
+  }
+
+  const toggle = event.target.closest(".intake-toggle-grid button[data-value]");
+  if (toggle) {
+    toggle.classList.toggle("is-active");
+    updateIntakeExperience("Profile updated.");
+    queuePreferenceSave("intake-toggle");
+  }
+});
+
+intakeStudio.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter") return;
+  const input = event.target.closest(".intake-add-row input");
+  if (!input) return;
+  event.preventDefault();
+  const button = input.closest(".intake-add-row")?.querySelector("[data-add-token]");
+  if (button) addTokenFromInput(button.dataset.addToken, button.dataset.tokenInput);
+});
+
+intakeStudio.addEventListener("input", (event) => {
+  if (!event.target.closest("input, select")) return;
+  if (event.target === clientBudgetStyle) {
+    budgetSelect.value = clientBudgetStyle.value;
+    updateQuote();
+  }
+  updateIntakeExperience("Profile updated.");
+  queuePreferenceSave("intake-input");
+});
+
+intakeStudio.addEventListener("change", (event) => {
+  if (!event.target.closest("select")) return;
+  if (event.target === clientBudgetStyle) {
+    budgetSelect.value = clientBudgetStyle.value;
+    updateQuote();
+  }
+  updateIntakeExperience("Profile updated.");
+  queuePreferenceSave("intake-change");
+});
+
+saveIntake.addEventListener("click", saveIntakeProfile);
+resetIntake.addEventListener("click", () => {
+  renderIntakeDefaults();
+  queuePreferenceSave("intake-reset");
+});
+
 serviceChips.forEach((chip) => {
   chip.addEventListener("click", () => {
     serviceChips.forEach((item) => item.classList.remove("is-active"));
@@ -1513,7 +1924,9 @@ document.querySelector("#bookRequest").addEventListener("click", async () => {
   const service = selectedService();
   const assistant = topAssistant(service);
   const { total, fee, payout } = quoteState();
-  bookingStatus.textContent = `Intent Reactor locked ${assistant.name}: ${assistant.fit} fit, ${assistant.eta} minute ETA, ${currency(payout)} payout.`;
+  bookingStatus.textContent = assistant
+    ? `Intent Reactor locked ${assistant.name}: ${assistant.fit} fit, ${assistant.eta ? `${assistant.eta} minute ETA` : "live ETA"}, ${currency(payout)} payout.`
+    : `Intent Reactor priced the request at ${currency(total)}. Real assistant supply will match after verification.`;
   liveBookings.textContent = (Number(liveBookings.textContent.replace(",", "")) + 1).toLocaleString("en-US");
 
   try {
@@ -1522,14 +1935,18 @@ document.querySelector("#bookRequest").addEventListener("click", async () => {
       serviceCategory: service,
       urgency: timeSelect.value,
       budgetCents: total * 100,
-      assistantId: assistant.id,
-      market: "Miami",
-      matchScore: assistant.fit,
+      assistantId: assistant?.id || null,
+      market: currentMarket(),
+      matchScore: assistant?.fit || null,
       platformFeeCents: fee * 100
     });
-    bookingStatus.textContent = `${result.message} ${assistant.name} remains the top trust-lattice match.`;
+    bookingStatus.textContent = assistant
+      ? `${result.message} ${assistant.name} remains the top trust-lattice match.`
+      : `${result.message} AURA will attach verified supply when available.`;
   } catch {
-    bookingStatus.textContent = `Request drafted with ${assistant.name}. Sign in to save and manage it.`;
+    bookingStatus.textContent = assistant
+      ? `Request drafted with ${assistant.name}. Sign in to save and manage it.`
+      : "Request drafted. Sign in to save it and match verified assistants.";
   }
 });
 
@@ -1539,9 +1956,16 @@ document.querySelector("#optimizeDay").addEventListener("click", () => {
 });
 
 assistantList.addEventListener("click", (event) => {
+  const profileJump = event.target.closest("[data-jump-profile]");
+  if (profileJump) {
+    document.querySelector("#profile").scrollIntoView({ behavior: "smooth" });
+    return;
+  }
+
   const button = event.target.closest(".hire-assistant");
   if (!button) return;
-  const assistant = assistants.find((item) => item.id === button.dataset.assistant);
+  const assistant = assistantSupply.find((item) => item.id === button.dataset.assistant);
+  if (!assistant) return;
   bookingStatus.textContent = `${assistant.name} is reserved for your request. Confirm details when ready.`;
   document.querySelector(".command-console").scrollIntoView({ behavior: "smooth" });
 });
@@ -1563,6 +1987,13 @@ autopilotQueueEl.addEventListener("click", (event) => {
 });
 
 missionQueue.addEventListener("click", (event) => {
+  const assistantProfileJump = event.target.closest("[data-jump-assistant-profile]");
+  if (assistantProfileJump) {
+    setIntakeMode("assistant");
+    document.querySelector("#profile").scrollIntoView({ behavior: "smooth" });
+    return;
+  }
+
   const button = event.target.closest(".tiny-action");
   if (!button) return;
   const card = button.closest(".mission-card");
@@ -1683,5 +2114,7 @@ renderChecklists();
 renderLifeprint();
 renderMissionControl();
 renderDetections();
+renderIntakeDefaults();
 updateQuote();
+loadAssistants();
 initAuth();

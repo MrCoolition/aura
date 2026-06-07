@@ -1,4 +1,4 @@
-import { demoInventoryDetections } from "../server/demo-data.js";
+import { localInventoryDetections } from "../server/local-data.js";
 import { requireAuth, runWithUserContext, upsertAuraUser } from "../server/auth.js";
 import { getSql, json, missingDatabasePayload, readJson } from "../server/db.js";
 
@@ -14,7 +14,7 @@ export async function POST(request) {
   const fileName = String(body.fileName || "inventory-upload.jpg").trim();
   const detectedItems = Array.isArray(body.detectedItems) && body.detectedItems.length
     ? body.detectedItems
-    : demoInventoryDetections;
+    : localInventoryDetections;
   const sql = await getSql();
 
   if (!sql) {
@@ -41,7 +41,7 @@ export async function POST(request) {
       values (
         ${auraUser.id},
         ${fileName},
-        'aura-browser-demo',
+        'aura-browser-local',
         'processed',
         ${JSON.stringify({ detections: detectedItems })}::jsonb
       )

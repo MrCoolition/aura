@@ -43,7 +43,7 @@ AURA is built as a two-sided marketplace:
 
 ## Data Model
 
-Run `database/schema.sql` on Neon first, then `database/seed.sql` for demo data.
+Run `database/schema.sql` on Neon first, then `database/seed.sql` for local non-provider seed data.
 
 Core tables:
 

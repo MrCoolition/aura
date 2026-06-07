@@ -1,4 +1,4 @@
-import { demoCleaningRooms } from "../server/demo-data.js";
+import { localCleaningRooms } from "../server/local-data.js";
 import { requireAuth, runWithUserContext, upsertAuraUser } from "../server/auth.js";
 import { getSql, json, missingDatabasePayload, readJson } from "../server/db.js";
 
@@ -7,7 +7,7 @@ export async function OPTIONS() {
 }
 
 export async function GET() {
-  return json({ ok: true, mode: "demo", data: demoCleaningRooms });
+  return json({ ok: true, mode: "local", data: localCleaningRooms });
 }
 
 function normalizedRooms(rooms) {
@@ -56,7 +56,7 @@ export async function POST(request) {
   const planPayload = {
     level,
     priority,
-    market: String(body.market || "Miami").trim(),
+    market: String(body.market || "Your market").trim(),
     rooms,
     generatedBy: "cleanprint-builder"
   };
@@ -65,7 +65,7 @@ export async function POST(request) {
   if (!sql) {
     return json(
       missingDatabasePayload("cleaning_plan", {
-        id: `demo_cleanprint_${Date.now()}`,
+        id: `local_cleanprint_${Date.now()}`,
         level,
         priority,
         room_count: rooms.length,

@@ -35,9 +35,9 @@ export async function readJson(request) {
 export function missingDatabasePayload(resource, data) {
   return {
     ok: true,
-    mode: "demo",
+    mode: "local",
     resource,
     data,
-    message: "Demo data returned. Set DATABASE_URL on Vercel to persist this resource in Neon."
+    message: "Local fallback returned. Set DATABASE_URL on Vercel to persist this resource in Neon."
   };
 }

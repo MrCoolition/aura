@@ -22,7 +22,7 @@ export async function GET(request) {
           feedback_events: 4
         },
         users: [
-          { id: "demo-admin", full_name: "AURA Admin", email: "admin@aura.local", role: "admin", created_at: new Date().toISOString() }
+          { id: "local-admin", full_name: "AURA Admin", email: "admin@aura.local", role: "admin", created_at: new Date().toISOString() }
         ],
         serviceRequests: [],
         cleanprints: [],

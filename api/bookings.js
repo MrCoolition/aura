@@ -14,7 +14,7 @@ export async function POST(request) {
   const serviceCategory = String(body.serviceCategory || "home").trim();
   const urgency = String(body.urgency || "today").trim();
   const budgetCents = Number(body.budgetCents || 14000);
-  const market = String(body.market || process.env.AURA_DEFAULT_MARKET || "Miami").trim();
+  const market = String(body.market || process.env.AURA_DEFAULT_MARKET || "Your market").trim();
   const matchScore = Math.max(0, Math.min(100, Number(body.matchScore || 88)));
 
   if (!taskSummary) {
@@ -29,7 +29,7 @@ export async function POST(request) {
   if (!sql) {
     return json(
       missingDatabasePayload("booking", {
-        id: `demo_${Date.now()}`,
+        id: `local_${Date.now()}`,
         task_summary: taskSummary,
         service_category: serviceCategory,
         urgency,
@@ -59,7 +59,7 @@ export async function POST(request) {
       )
       values (
         ${auraUser.full_name || "AURA Web Client"},
-        ${auraUser.email || "demo@aura.local"},
+        ${auraUser.email || "client@aura.local"},
         ${auraUser.id},
         ${serviceCategory},
         ${taskSummary},

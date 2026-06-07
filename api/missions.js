@@ -1,4 +1,3 @@
-import { demoAssistantMissions } from "../server/demo-data.js";
 import { getSql, json, missingDatabasePayload, readJson } from "../server/db.js";
 
 export async function OPTIONS() {
@@ -9,7 +8,13 @@ export async function GET() {
   const sql = await getSql();
 
   if (!sql) {
-    return json(missingDatabasePayload("assistant_missions", demoAssistantMissions));
+    return json({
+      ok: true,
+      mode: "empty",
+      resource: "assistant_missions",
+      data: [],
+      message: "No live assistant missions are connected yet."
+    });
   }
 
   const missions = await sql`
@@ -25,7 +30,7 @@ export async function GET() {
 export async function POST(request) {
   const body = await readJson(request);
   const title = String(body.title || "AURA mission").trim();
-  const market = String(body.market || "Miami").trim();
+  const market = String(body.market || "Your market").trim();
   const payoutCents = Number(body.payoutCents || body.payout_cents || 10000);
   const routeMinutes = Number(body.routeMinutes || body.route_minutes || 30);
   const trustScore = Number(body.trustScore || body.trust_score || 90);

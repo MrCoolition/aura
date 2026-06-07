@@ -1,5 +1,26 @@
 select set_config('app.current_role', 'admin', false);
 
+delete from assistant_missions
+where assistant_profile_id in (
+  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+  'cccccccc-cccc-4ccc-8ccc-cccccccccccc'
+);
+
+delete from assistant_profiles
+where id in (
+  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+  'cccccccc-cccc-4ccc-8ccc-cccccccccccc'
+);
+
+delete from aura_users
+where id in (
+  '11111111-1111-4111-8111-111111111111',
+  '22222222-2222-4222-8222-222222222222',
+  '33333333-3333-4333-8333-333333333333'
+);
+
 insert into service_categories (slug, name, description, base_price_cents)
 values
   ('home', 'Home reset', 'Premium cleaning, staging, restock, and guest prep.', 14000),
@@ -14,89 +35,13 @@ on conflict (slug) do update set
 
 insert into aura_users (id, role, full_name, email, phone)
 values
-  ('11111111-1111-4111-8111-111111111111', 'assistant', 'Marisol Vega', 'marisol@aura.local', '+13055550101'),
-  ('22222222-2222-4222-8222-222222222222', 'assistant', 'Dante Reyes', 'dante@aura.local', '+13055550102'),
-  ('33333333-3333-4333-8333-333333333333', 'assistant', 'Imani King', 'imani@aura.local', '+13055550103'),
-  ('44444444-4444-4444-8444-444444444444', 'client', 'AURA Demo Client', 'demo@aura.local', '+13055550104')
+  ('44444444-4444-4444-8444-444444444444', 'client', 'AURA Local Client', 'client@aura.local', '+10000000000')
 on conflict (email) do nothing;
-
-insert into assistant_profiles (
-  id,
-  user_id,
-  display_name,
-  headline,
-  bio,
-  home_market,
-  status,
-  verification_level,
-  hourly_rate_cents,
-  rating,
-  acceptance_rate,
-  completed_jobs,
-  eta_minutes,
-  ai_tags
-)
-values
-  (
-    'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
-    '11111111-1111-4111-8111-111111111111',
-    'Marisol V.',
-    'Estate resets, hosting, pantry flow',
-    'Luxury hotel standards with home memory.',
-    'Miami',
-    'active',
-    'elite_verified',
-    6800,
-    4.98,
-    96.00,
-    612,
-    18,
-    '["Home reset", "Events", "Inventory"]'::jsonb
-  ),
-  (
-    'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
-    '22222222-2222-4222-8222-222222222222',
-    'Dante R.',
-    'Calendar rescue, travel, reservations',
-    'Turns chaotic days into clean routes.',
-    'Miami',
-    'active',
-    'elite_verified',
-    7400,
-    4.96,
-    93.00,
-    438,
-    11,
-    '["Calendar", "Travel", "Dining"]'::jsonb
-  ),
-  (
-    'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
-    '33333333-3333-4333-8333-333333333333',
-    'Imani K.',
-    'Errands, shopping, client taste profiles',
-    'Precise, warm, and fast.',
-    'Miami',
-    'active',
-    'elite_verified',
-    6200,
-    4.94,
-    98.00,
-    521,
-    24,
-    '["Errands", "Wardrobe", "Gifts"]'::jsonb
-  )
-on conflict (id) do update set
-  headline = excluded.headline,
-  bio = excluded.bio,
-  status = excluded.status,
-  rating = excluded.rating,
-  completed_jobs = excluded.completed_jobs,
-  ai_tags = excluded.ai_tags;
 
 insert into client_profiles (user_id, default_market, household_notes, preference_memory, membership_tier)
 values (
   '44444444-4444-4444-8444-444444444444',
-  'Miami',
+  'Your market',
   '{"building_access": "Front desk cleared after ID check", "pet": "No pets"}'::jsonb,
   '{"water": "Topo Chico", "towels": "white only", "dining": "late seating preferred"}'::jsonb,
   'black'
@@ -205,11 +150,4 @@ values
   ('44444444-4444-4444-8444-444444444444', 'Guest Mode', 'Arm a 2-hour reset before guests arrive.', 91, '$54 saved friction'),
   ('44444444-4444-4444-8444-444444444444', 'Fridge Sentinel', 'Restock before the week gets loud.', 84, '18 min decision saved'),
   ('44444444-4444-4444-8444-444444444444', 'Calendar Shield', 'Move a low-value call without touching protected focus time.', 78, '2.1h reclaimed')
-on conflict do nothing;
-
-insert into assistant_missions (assistant_profile_id, title, market, payout_cents, route_minutes, trust_score, mission_brief)
-values
-  ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'Penthouse reset + restock', 'Miami', 14800, 31, 97, 'Home reset, guest towels, sparkling water, reservation watch.'),
-  ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Dry cleaning + gift run', 'Miami', 8600, 18, 91, 'Two pickups, one return, client taste profile attached.'),
-  ('cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'Travel calm pack', 'Miami', 12200, 42, 94, 'Packing list, car timing, dinner hold, weather note.')
 on conflict do nothing;

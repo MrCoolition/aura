@@ -22,6 +22,7 @@
           </span>
         </a>
         <nav class="topnav" aria-label="AURA sections">
+          <a href="#profile">Profile</a>
           <a href="#marketplace">Marketplace</a>
           <a href="#booking-engine">Booking</a>
           <a href="#calendar">Calendar</a>
@@ -134,7 +135,7 @@
                 <p class="eyebrow">AI request builder</p>
                 <h2>What needs to be handled?</h2>
               </div>
-              <span class="live-pill">Live in Miami</span>
+              <span class="live-pill" id="marketPill">Choose market</span>
             </div>
 
             <div class="chip-row" role="list" aria-label="Service categories">
@@ -205,7 +206,7 @@
             </div>
             <p class="status-line" id="bookingStatus">AURA is watching weather, traffic, ETA, and assistant fit.</p>
             <div class="secure-profile-strip" id="secureProfileStrip">
-              <span id="authStatus">Demo profile</span>
+              <span id="authStatus">Local profile</span>
               <strong id="authGreeting">Sign in to make AURA yours.</strong>
             </div>
           </section>
@@ -230,6 +231,266 @@
           </div>
         </section>
 
+        <section class="intake-section" id="profile" aria-labelledby="intake-title">
+          <div class="section-heading">
+            <p class="eyebrow">Intake Studio</p>
+            <h2 id="intake-title">Build the AURA profile once. Let every booking get sharper.</h2>
+            <p>Clients tune household memory, taste, access, and boundaries. Assistants tune services, availability, proof standards, and earning strategy.</p>
+          </div>
+
+          <div class="intake-studio" id="intakeStudio" data-intake-mode="client">
+            <aside class="intake-rail" aria-label="Profile progress">
+              <div class="intake-rail-brand">
+                <img src="/assets/aura-app-icon.png" alt="">
+                <div>
+                  <span>AURA DNA</span>
+                  <strong id="intakeRailTitle">Client profile</strong>
+                </div>
+              </div>
+              <div class="intake-mode-tabs" aria-label="Choose profile side">
+                <button class="is-active" data-intake-mode-button="client" type="button">Hire</button>
+                <button data-intake-mode-button="assistant" type="button">Earn</button>
+              </div>
+              <div class="intake-score">
+                <span>Profile lock</span>
+                <strong id="intakeCompleteness">74%</strong>
+                <div class="progress-track" aria-hidden="true"><span class="progress-fill" id="intakeProgress"></span></div>
+              </div>
+              <div class="intake-radar" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+                <b>A</b>
+              </div>
+              <div class="intake-status" id="intakeStatus">Profile tuning is local until you save.</div>
+            </aside>
+
+            <div class="intake-workspace">
+              <div class="intake-pane" id="clientIntake">
+                <article class="intake-card intake-card-wide">
+                  <div class="panel-title">
+                    <h3>Household signal</h3>
+                    <span>Client side</span>
+                  </div>
+                  <div class="intake-field-grid">
+                    <label>
+                      <span>Home base</span>
+                      <input id="clientMarket" type="text" placeholder="City or service area">
+                    </label>
+                    <label>
+                      <span>Space type</span>
+                      <select id="clientHomeType">
+                        <option>Apartment</option>
+                        <option selected>Condo</option>
+                        <option>House</option>
+                        <option>Office</option>
+                        <option>Estate</option>
+                      </select>
+                    </label>
+                    <label>
+                      <span>Service rhythm</span>
+                      <select id="clientCadence">
+                        <option>On demand</option>
+                        <option selected>Weekly flow</option>
+                        <option>Before guests</option>
+                        <option>Travel weeks</option>
+                        <option>Daily support</option>
+                      </select>
+                    </label>
+                    <label>
+                      <span>Default spend</span>
+                      <select id="clientBudgetStyle">
+                        <option value="85">Starter</option>
+                        <option value="140" selected>Premium</option>
+                        <option value="260">Elite</option>
+                        <option value="520">Full day</option>
+                      </select>
+                    </label>
+                  </div>
+                </article>
+
+                <article class="intake-card">
+                  <div class="panel-title">
+                    <h3>Service orbit</h3>
+                    <span id="clientServiceCount">4 active</span>
+                  </div>
+                  <div class="intake-toggle-grid" id="clientServiceToggles">
+                    <button class="is-active" data-value="Home reset" type="button">Home reset</button>
+                    <button class="is-active" data-value="Calendar" type="button">Calendar</button>
+                    <button class="is-active" data-value="Errands" type="button">Errands</button>
+                    <button data-value="Travel" type="button">Travel</button>
+                    <button class="is-active" data-value="Inventory" type="button">Inventory</button>
+                    <button data-value="Events" type="button">Events</button>
+                  </div>
+                </article>
+
+                <article class="intake-card">
+                  <div class="panel-title">
+                    <h3>Taste memory</h3>
+                    <span id="clientPreferenceCount">0 saved</span>
+                  </div>
+                  <div class="intake-token-list" id="clientPreferenceChips"></div>
+                  <div class="intake-add-row">
+                    <input id="clientPreferenceInput" type="text" placeholder="Quiet table, citrus scent, photo proof">
+                    <button class="tiny-action" data-add-token="clientPreferenceChips" data-token-input="clientPreferenceInput" type="button">Add</button>
+                  </div>
+                </article>
+
+                <article class="intake-card">
+                  <div class="panel-title">
+                    <h3>Boundaries</h3>
+                    <span id="clientBoundaryCount">0 guardrails</span>
+                  </div>
+                  <div class="intake-token-list" id="clientBoundaryList"></div>
+                  <div class="intake-add-row">
+                    <input id="clientBoundaryInput" type="text" placeholder="No calls after 6, ask before substitutions">
+                    <button class="tiny-action" data-add-token="clientBoundaryList" data-token-input="clientBoundaryInput" type="button">Add</button>
+                  </div>
+                </article>
+
+                <article class="intake-card">
+                  <div class="panel-title">
+                    <h3>Access and proof</h3>
+                    <span>Trust flow</span>
+                  </div>
+                  <div class="intake-field-grid">
+                    <label>
+                      <span>Entry style</span>
+                      <select id="clientAccess">
+                        <option>Meet at door</option>
+                        <option selected>Front desk release</option>
+                        <option>Smart lock</option>
+                        <option>Concierge key</option>
+                      </select>
+                    </label>
+                    <label>
+                      <span>Proof level</span>
+                      <select id="clientProof">
+                        <option>Light recap</option>
+                        <option selected>Photo proof</option>
+                        <option>Receipt and photo</option>
+                        <option>White glove audit</option>
+                      </select>
+                    </label>
+                  </div>
+                </article>
+              </div>
+
+              <div class="intake-pane" id="assistantIntake" hidden>
+                <article class="intake-card intake-card-wide">
+                  <div class="panel-title">
+                    <h3>Operator signal</h3>
+                    <span>Assistant side</span>
+                  </div>
+                  <div class="intake-field-grid">
+                    <label>
+                      <span>Market</span>
+                      <input id="assistantMarket" type="text" placeholder="City or service area">
+                    </label>
+                    <label>
+                      <span>Route radius</span>
+                      <select id="assistantRadius">
+                        <option>3 miles</option>
+                        <option selected>8 miles</option>
+                        <option>15 miles</option>
+                        <option>Any premium route</option>
+                      </select>
+                    </label>
+                    <label>
+                      <span>Weekly hours</span>
+                      <input id="assistantHours" type="number" min="4" max="60" value="24">
+                    </label>
+                    <label>
+                      <span>Minimum payout</span>
+                      <input id="assistantMinimum" type="number" min="40" step="5" value="85">
+                    </label>
+                  </div>
+                </article>
+
+                <article class="intake-card">
+                  <div class="panel-title">
+                    <h3>Service stack</h3>
+                    <span id="assistantServiceCount">4 active</span>
+                  </div>
+                  <div class="intake-toggle-grid" id="assistantServiceToggles">
+                    <button class="is-active" data-value="Home reset" type="button">Home reset</button>
+                    <button class="is-active" data-value="Errands" type="button">Errands</button>
+                    <button data-value="Travel" type="button">Travel</button>
+                    <button class="is-active" data-value="Inventory" type="button">Inventory</button>
+                    <button class="is-active" data-value="Events" type="button">Events</button>
+                    <button data-value="Executive admin" type="button">Executive admin</button>
+                  </div>
+                </article>
+
+                <article class="intake-card">
+                  <div class="panel-title">
+                    <h3>Strengths</h3>
+                    <span id="assistantStrengthCount">0 signals</span>
+                  </div>
+                  <div class="intake-token-list" id="assistantStrengthList"></div>
+                  <div class="intake-add-row">
+                    <input id="assistantStrengthInput" type="text" placeholder="Hosting resets, luxury errands, fast receipts">
+                    <button class="tiny-action" data-add-token="assistantStrengthList" data-token-input="assistantStrengthInput" type="button">Add</button>
+                  </div>
+                </article>
+
+                <article class="intake-card">
+                  <div class="panel-title">
+                    <h3>Filters</h3>
+                    <span id="assistantFilterCount">0 filters</span>
+                  </div>
+                  <div class="intake-token-list" id="assistantFilterList"></div>
+                  <div class="intake-add-row">
+                    <input id="assistantFilterInput" type="text" placeholder="No heavy lifting, no pet care, premium routes only">
+                    <button class="tiny-action" data-add-token="assistantFilterList" data-token-input="assistantFilterInput" type="button">Add</button>
+                  </div>
+                </article>
+
+                <article class="intake-card">
+                  <div class="panel-title">
+                    <h3>Availability</h3>
+                    <span id="assistantAvailabilityCount">0 windows</span>
+                  </div>
+                  <div class="intake-toggle-grid" id="assistantAvailabilityToggles">
+                    <button class="is-active" data-value="Weekday mornings" type="button">Weekday mornings</button>
+                    <button class="is-active" data-value="Afternoons" type="button">Afternoons</button>
+                    <button data-value="Evenings" type="button">Evenings</button>
+                    <button data-value="Weekends" type="button">Weekends</button>
+                    <button class="is-active" data-value="Rush windows" type="button">Rush windows</button>
+                    <button data-value="Travel support" type="button">Travel support</button>
+                  </div>
+                  <label class="intake-single-field">
+                    <span>Earning posture</span>
+                    <select id="assistantPayoutStrategy">
+                      <option>Steady premium routes</option>
+                      <option selected>High trust, high payout</option>
+                      <option>Short urgent missions</option>
+                      <option>Recurring household books</option>
+                    </select>
+                  </label>
+                </article>
+              </div>
+            </div>
+
+            <aside class="intake-live-card" aria-label="Live AURA profile">
+              <div class="panel-title">
+                <h3>Live profile</h3>
+                <span id="intakeLiveMode">Hire</span>
+              </div>
+              <div class="intake-live-hero">
+                <strong id="intakeLiveTitle">Set your market and rhythm</strong>
+                <p id="intakeLiveBody">AURA is tuned for premium home resets, inventory, errands, and photo proof.</p>
+              </div>
+              <div class="intake-live-metrics" id="intakeLiveMetrics"></div>
+              <div class="intake-live-stack" id="intakeLiveStack"></div>
+              <div class="intake-actions">
+                <button class="primary-action" id="saveIntake" type="button">Save profile</button>
+                <button class="ghost-action" id="resetIntake" type="button">Reset</button>
+              </div>
+            </aside>
+          </div>
+        </section>
+
         <section class="artillery-section" id="booking-engine" aria-labelledby="booking-engine-title">
           <div class="section-heading">
             <p class="eyebrow">Intent Reactor</p>
@@ -245,7 +506,7 @@
               <div class="operation-brief">
                 <div>
                   <span>Live ops brief</span>
-                  <strong id="reactorHeadline">Marisol V. can execute in 18 minutes</strong>
+                <strong id="reactorHeadline">AURA can price the request before verified supply is loaded</strong>
                 </div>
                 <p id="reactorSummary">Splitting request into home, inventory, calendar, and proof signals.</p>
               </div>
@@ -256,7 +517,7 @@
             <article class="match-lattice" aria-label="Assistant match lattice">
               <div class="panel-title">
                 <h3>Trust lattice</h3>
-                <span id="latticeWinner">Marisol V.</span>
+                <span id="latticeWinner">Supply pending</span>
               </div>
               <div id="matchLattice"></div>
             </article>
@@ -273,8 +534,8 @@
         <section class="work-grid" id="marketplace" aria-labelledby="marketplace-title">
           <div class="section-heading">
             <p class="eyebrow">Hire instantly</p>
-            <h2 id="marketplace-title">Elite assistants near you</h2>
-            <p>Every profile is built around trust, speed, taste, and repeat booking economics.</p>
+            <h2 id="marketplace-title">Verified assistant supply</h2>
+            <p>Real providers appear here only after they are approved and connected to your market.</p>
           </div>
           <div class="assistant-list" id="assistantList" aria-live="polite"></div>
         </section>

@@ -6,12 +6,37 @@ const defaultPreferences = {
   defaultService: "home",
   defaultBudget: "140",
   defaultUrgency: "today",
+  intake: {
+    mode: "client",
+    client: {
+      market: "",
+      homeType: "Condo",
+      cadence: "Weekly flow",
+      budgetStyle: "140",
+      services: ["Home reset", "Calendar", "Errands", "Inventory"],
+      preferences: ["Topo Chico glass bottles", "White towels folded thirds", "Late seating, quiet room"],
+      boundaries: ["Ask before substitutions", "Photo proof before checkout"],
+      access: "Front desk release",
+      proof: "Photo proof"
+    },
+    assistant: {
+      market: "",
+      radius: "8 miles",
+      hours: "24",
+      minimum: "85",
+      services: ["Home reset", "Errands", "Inventory", "Events"],
+      strengths: ["Hotel reset standards", "Receipt capture", "Hosting prep"],
+      filters: ["No heavy lifting", "Premium routes preferred"],
+      availability: ["Weekday mornings", "Afternoons", "Rush windows"],
+      payoutStrategy: "High trust, high payout"
+    }
+  },
   cleanprint: {
     level: "reset",
     priority: "detail",
     rooms: ["kitchen", "primary-bath", "living", "entry"]
   },
-  market: "Miami"
+  market: ""
 };
 
 export async function OPTIONS() {

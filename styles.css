@@ -724,7 +724,9 @@ label span,
 }
 
 textarea,
-select {
+select,
+input[type="text"],
+input[type="number"] {
   width: 100%;
   color: var(--ink);
   background: rgba(255, 255, 255, 0.08);
@@ -741,6 +743,12 @@ textarea {
 
 select {
   padding: 12px;
+}
+
+input[type="text"],
+input[type="number"] {
+  min-height: 44px;
+  padding: 11px 12px;
 }
 
 .booking-grid {
@@ -860,6 +868,7 @@ select {
 }
 
 .artillery-section,
+.intake-section,
 .work-grid,
 .split-section,
 .lifeprint-section,
@@ -877,6 +886,326 @@ select {
 .section-heading p:not(.eyebrow) {
   color: var(--muted);
   line-height: 1.6;
+}
+
+.intake-section {
+  background:
+    linear-gradient(120deg, rgba(69, 230, 161, 0.07), transparent 34%),
+    linear-gradient(280deg, rgba(255, 211, 106, 0.06), transparent 42%),
+    #070a0f;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.intake-studio {
+  display: grid;
+  grid-template-columns: minmax(240px, 300px) minmax(420px, 1fr) minmax(300px, 380px);
+  gap: 16px;
+  align-items: start;
+}
+
+.intake-rail,
+.intake-live-card,
+.intake-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.06), transparent 46%),
+    rgba(11, 15, 23, 0.94);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.28);
+}
+
+.intake-rail {
+  position: sticky;
+  top: 92px;
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+  overflow: hidden;
+}
+
+.intake-rail-brand {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.intake-rail-brand img {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius);
+  object-fit: cover;
+  box-shadow: 0 16px 34px rgba(17, 103, 255, 0.26);
+}
+
+.intake-rail-brand span,
+.intake-score span,
+.intake-live-metrics span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.intake-rail-brand strong {
+  display: block;
+  margin-top: 3px;
+}
+
+.intake-mode-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.intake-mode-tabs button,
+.intake-toggle-grid button {
+  min-height: 38px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.04);
+  font-weight: 800;
+}
+
+.intake-mode-tabs button.is-active {
+  color: #061018;
+  background: var(--ink);
+}
+
+.intake-score {
+  display: grid;
+  gap: 8px;
+}
+
+.intake-score strong {
+  font-size: 2.35rem;
+}
+
+.intake-radar {
+  position: relative;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(22, 200, 255, 0.28);
+  border-radius: var(--radius);
+  background:
+    radial-gradient(circle at center, rgba(22, 200, 255, 0.24) 0 7%, transparent 8%),
+    repeating-radial-gradient(circle at center, rgba(255, 255, 255, 0.13) 0 1px, transparent 1px 44px),
+    linear-gradient(135deg, rgba(22, 200, 255, 0.12), rgba(155, 66, 255, 0.08));
+  overflow: hidden;
+}
+
+.intake-radar span {
+  position: absolute;
+  width: 54%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  transform-origin: left center;
+  opacity: 0.72;
+}
+
+.intake-radar span:nth-child(1) {
+  transform: rotate(24deg);
+}
+
+.intake-radar span:nth-child(2) {
+  transform: rotate(142deg);
+}
+
+.intake-radar span:nth-child(3) {
+  transform: rotate(268deg);
+}
+
+.intake-radar b {
+  position: relative;
+  z-index: 1;
+  font-size: 2.4rem;
+}
+
+.intake-status {
+  min-height: 44px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.intake-workspace {
+  display: grid;
+  gap: 16px;
+}
+
+.intake-pane {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.intake-card {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+}
+
+.intake-card .panel-title {
+  padding: 0;
+}
+
+.intake-card-wide {
+  grid-column: 1 / -1;
+}
+
+.intake-field-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.intake-single-field {
+  display: block;
+  margin-top: 14px;
+}
+
+.intake-toggle-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.intake-toggle-grid button {
+  text-align: left;
+  padding: 10px 11px;
+}
+
+.intake-toggle-grid button.is-active {
+  color: var(--ink);
+  border-color: rgba(22, 200, 255, 0.72);
+  background:
+    linear-gradient(135deg, rgba(22, 200, 255, 0.18), rgba(155, 66, 255, 0.1)),
+    rgba(255, 255, 255, 0.04);
+}
+
+.intake-token-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 44px;
+}
+
+.intake-token {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  padding: 7px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.intake-token span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.82rem;
+}
+
+.intake-token-remove {
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 50%;
+  color: #061018;
+  background: var(--cyan);
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.intake-add-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.intake-live-card {
+  position: sticky;
+  top: 92px;
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.intake-live-card .panel-title {
+  padding: 0;
+}
+
+.intake-live-hero {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid rgba(69, 230, 161, 0.28);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, rgba(69, 230, 161, 0.13), rgba(22, 200, 255, 0.08)),
+    rgba(255, 255, 255, 0.035);
+}
+
+.intake-live-hero strong {
+  font-size: 1.42rem;
+  line-height: 1.1;
+}
+
+.intake-live-hero p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.intake-live-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.intake-live-metrics div {
+  display: grid;
+  gap: 5px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.intake-live-metrics strong {
+  font-size: 1.18rem;
+}
+
+.intake-live-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.intake-live-stack span {
+  border: 1px solid rgba(255, 211, 106, 0.3);
+  border-radius: 999px;
+  color: var(--muted);
+  background: rgba(255, 211, 106, 0.06);
+  padding: 7px 9px;
+  font-size: 0.78rem;
+}
+
+.intake-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .reactor-grid,
@@ -1304,6 +1633,34 @@ select {
   display: grid;
   gap: 14px;
   padding: 18px;
+}
+
+.assistant-empty-state,
+.mission-empty-state,
+.lattice-empty {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid rgba(22, 200, 255, 0.28);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, rgba(22, 200, 255, 0.12), rgba(69, 230, 161, 0.06)),
+    rgba(255, 255, 255, 0.04);
+}
+
+.assistant-empty-state {
+  grid-column: 1 / -1;
+  min-height: 220px;
+  align-content: center;
+}
+
+.assistant-empty-state p,
+.mission-empty-state p,
+.lattice-empty span {
+  max-width: 620px;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
 }
 
 .assistant-top {
@@ -1901,6 +2258,7 @@ output {
   }
 
   .hero-workbench,
+  .intake-studio,
   .split-section,
   .reactor-grid,
   .lifeprint-grid,
@@ -1928,8 +2286,15 @@ output {
     align-self: start;
   }
 
+  .intake-rail,
+  .intake-live-card {
+    position: static;
+  }
+
   .assistant-list,
   .checklist-board,
+  .intake-pane,
+  .intake-field-grid,
   .room-builder,
   .room-plan,
   .admin-grid,
@@ -1969,6 +2334,7 @@ output {
   }
 
   .hero-workbench,
+  .intake-section,
   .work-grid,
   .split-section,
   .inventory-section,
@@ -2021,6 +2387,10 @@ output {
   .atom-grid,
   .reactor-kpis,
   .ops-flow,
+  .intake-pane,
+  .intake-field-grid,
+  .intake-toggle-grid,
+  .intake-live-metrics,
   #memoryNodes,
   .mission-meta,
   .room-chip-grid,
@@ -2034,6 +2404,7 @@ output {
   .value-row,
   .preference-row,
   .route-leg,
+  .intake-add-row,
   .proof-row {
     grid-template-columns: 1fr;
   }
@@ -2052,5 +2423,9 @@ output {
 
   .timeline-item {
     grid-template-columns: 1fr;
+  }
+
+  .intake-actions {
+    display: grid;
   }
 }

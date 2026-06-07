@@ -466,9 +466,9 @@ export async function requireAuth(request) {
     return {
       configured: false,
       user: {
-        sub: "demo|local",
-        name: "AURA Demo Client",
-        email: "demo@aura.local",
+        sub: "local|client",
+        name: "AURA Local Client",
+        email: "client@aura.local",
         picture: ""
       }
     };
