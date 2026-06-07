@@ -1565,6 +1565,10 @@ function profileSaveFailureMessage(error) {
     return "Database is connected, but the AURA tables are not installed yet.";
   }
 
+  if (error?.data?.code === "SCHEMA_INSTALL_FAILED") {
+    return "AURA tried to install the database tables, but Neon rejected the schema install.";
+  }
+
   if (error?.data?.code === "DATABASE_AUTH_FAILED") {
     return "Database credentials were rejected. Check the Neon connection string.";
   }

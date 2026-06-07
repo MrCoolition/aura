@@ -46,6 +46,7 @@ export function databaseErrorCode(error) {
 export function databaseErrorMessage(code) {
   const messages = {
     SCHEMA_NOT_INSTALLED: "Database connected, but the AURA tables are not installed yet.",
+    SCHEMA_INSTALL_FAILED: "AURA tried to install the database tables, but the schema install did not complete.",
     DATABASE_AUTH_FAILED: "Database connection was rejected. Check the Neon connection string credentials.",
     DATABASE_NOT_FOUND: "Database connection points to a database that does not exist.",
     DATABASE_PERMISSION_DENIED: "Database rejected this profile write.",
@@ -58,7 +59,7 @@ export function databaseErrorMessage(code) {
 
 export function databaseErrorStatus(code) {
   if (code === "DATABASE_PERMISSION_DENIED") return 403;
-  if (["SCHEMA_NOT_INSTALLED", "DATABASE_AUTH_FAILED", "DATABASE_NOT_FOUND", "DATABASE_CONNECTION_FAILED"].includes(code)) {
+  if (["SCHEMA_NOT_INSTALLED", "SCHEMA_INSTALL_FAILED", "DATABASE_AUTH_FAILED", "DATABASE_NOT_FOUND", "DATABASE_CONNECTION_FAILED"].includes(code)) {
     return 503;
   }
   return 500;

@@ -1,5 +1,6 @@
 import { requireAuth } from "../../server/auth.js";
 import { databaseErrorPayload, databaseErrorStatus, getSql, json } from "../../server/db.js";
+import { coreSchemaStatus } from "../../server/migrate.js";
 
 export async function OPTIONS() {
   return json({ ok: true });
@@ -37,44 +38,25 @@ export async function GET(request) {
         current_user as user_name,
         now() as checked_at
     `;
-    const tableRows = await sql`
-      select
-        table_name,
-        to_regclass('public.' || table_name) is not null as installed
-      from (
-        values
-          ('aura_users'),
-          ('user_preferences'),
-          ('client_profiles'),
-          ('assistant_profiles'),
-          ('service_requests'),
-          ('bookings'),
-          ('cleaning_plans'),
-          ('inventory_locations'),
-          ('inventory_image_scans'),
-          ('feedback_events')
-      ) as required(table_name)
-      order by table_name
-    `;
-    const missingTables = tableRows.filter((row) => !row.installed).map((row) => row.table_name);
+    const schemaStatus = await coreSchemaStatus(sql);
 
     return json(
       {
-        ok: missingTables.length === 0,
+        ok: schemaStatus.ready,
         mode: "database",
         resource: "db_health",
-        code: missingTables.length ? "SCHEMA_NOT_INSTALLED" : "DATABASE_READY",
-        message: missingTables.length
-          ? "Database connected, but the AURA tables are not installed yet."
-          : "Database is connected and the core AURA tables are installed.",
+        code: schemaStatus.ready ? "DATABASE_READY" : "SCHEMA_NOT_INSTALLED",
+        message: schemaStatus.ready
+          ? "Database is connected and the core AURA tables are installed."
+          : "Database connected, but the AURA tables are not installed yet.",
         data: {
           database: ping?.database || "",
           checked_at: ping?.checked_at || new Date().toISOString(),
-          required_tables: tableRows,
-          missing_tables: missingTables
+          required_tables: schemaStatus.requiredTables,
+          missing_tables: schemaStatus.missingTables
         }
       },
-      missingTables.length ? 503 : 200
+      schemaStatus.ready ? 200 : 503
     );
   } catch (error) {
     const payload = databaseErrorPayload(error, "db_health");

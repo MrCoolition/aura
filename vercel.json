@@ -2,6 +2,12 @@
   "version": 2,
   "cleanUrls": true,
   "trailingSlash": false,
+  "functions": {
+    "api/**/*.js": {
+      "includeFiles": "database/schema.sql",
+      "maxDuration": 60
+    }
+  },
   "headers": [
     {
       "source": "/assets/(.*)",

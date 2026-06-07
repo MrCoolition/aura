@@ -7,6 +7,7 @@ import {
   missingDatabasePayload,
   readJson
 } from "../server/db.js";
+import { installAuraSchema } from "../server/migrate.js";
 
 const defaultPreferences = {
   mode: "hire",
@@ -50,6 +51,72 @@ export async function OPTIONS() {
   return json({ ok: true });
 }
 
+async function loadProfileFromDatabase(sql, authUser) {
+  const auraUser = await upsertAuraUser(sql, authUser);
+  const [rows] = await runWithUserContext(sql, auraUser, [
+    sql`
+      select preferences
+      from user_preferences
+      where user_id = ${auraUser.id} and namespace = 'aura'
+      limit 1
+    `
+  ]);
+
+  return { auraUser, preferences: rows[0]?.preferences || defaultPreferences };
+}
+
+async function saveProfileToDatabase(sql, authUser, preferences) {
+  const auraUser = await upsertAuraUser(sql, authUser);
+  const [rows] = await runWithUserContext(sql, auraUser, [
+    sql`
+      insert into user_preferences (
+        user_id,
+        namespace,
+        preferences
+      )
+      values (
+        ${auraUser.id},
+        'aura',
+        ${JSON.stringify(preferences)}::jsonb
+      )
+      on conflict (user_id, namespace) do update set
+        preferences = excluded.preferences,
+        updated_at = now()
+      returning id, namespace, preferences, updated_at
+    `
+  ]);
+
+  return { auraUser, preferences: rows[0].preferences };
+}
+
+async function runWithSchemaBootstrap(sql, operation) {
+  try {
+    return { migrated: false, migration: null, value: await operation() };
+  } catch (error) {
+    const payload = databaseErrorPayload(error, "profile");
+    if (payload.code !== "SCHEMA_NOT_INSTALLED") {
+      return { error: payload };
+    }
+
+    try {
+      const migration = await installAuraSchema(sql);
+      return { migrated: true, migration, value: await operation() };
+    } catch (migrationError) {
+      const migrationPayload = databaseErrorPayload(migrationError, "profile");
+      return {
+        error: {
+          ...migrationPayload,
+          code: migrationPayload.code === "SCHEMA_NOT_INSTALLED" ? "SCHEMA_INSTALL_FAILED" : migrationPayload.code,
+          message:
+            migrationPayload.code === "SCHEMA_NOT_INSTALLED"
+              ? "AURA tried to install the database tables, but the schema install did not complete."
+              : migrationPayload.message
+        }
+      };
+    }
+  }
+}
+
 export async function GET(request) {
   const auth = await requireAuth(request);
   if (auth.response) return auth.response;
@@ -71,29 +138,20 @@ export async function GET(request) {
     );
   }
 
-  let auraUser;
-  let rows;
-  try {
-    auraUser = await upsertAuraUser(sql, auth.user);
-    [rows] = await runWithUserContext(sql, auraUser, [
-      sql`
-        select preferences
-        from user_preferences
-        where user_id = ${auraUser.id} and namespace = 'aura'
-        limit 1
-      `
-    ]);
-  } catch (error) {
-    const payload = databaseErrorPayload(error, "profile");
+  const loaded = await runWithSchemaBootstrap(sql, () => loadProfileFromDatabase(sql, auth.user));
+  if (loaded.error) {
+    const payload = loaded.error;
     return json(payload, databaseErrorStatus(payload.code));
   }
 
   return json({
     ok: true,
     mode: "database",
+    migrated: loaded.migrated,
+    migration: loaded.migration,
     data: {
-      user: auraUser,
-      preferences: rows[0]?.preferences || defaultPreferences
+      user: loaded.value.auraUser,
+      preferences: loaded.value.preferences
     }
   });
 }
@@ -128,34 +186,19 @@ export async function POST(request) {
     );
   }
 
-  let auraUser;
-  let rows;
-  try {
-    auraUser = await upsertAuraUser(sql, auth.user);
-    [rows] = await runWithUserContext(sql, auraUser, [
-      sql`
-        insert into user_preferences (
-          user_id,
-          namespace,
-          preferences
-        )
-        values (
-          ${auraUser.id},
-          'aura',
-          ${JSON.stringify(preferences)}::jsonb
-        )
-        on conflict (user_id, namespace) do update set
-          preferences = excluded.preferences,
-          updated_at = now()
-        returning id, namespace, preferences, updated_at
-      `
-    ]);
-  } catch (error) {
-    const payload = databaseErrorPayload(error, "profile");
+  const saved = await runWithSchemaBootstrap(sql, () => saveProfileToDatabase(sql, auth.user, preferences));
+  if (saved.error) {
+    const payload = saved.error;
     return json(payload, databaseErrorStatus(payload.code));
   }
 
-  return json({ ok: true, mode: "database", data: { user: auraUser, preferences: rows[0].preferences } });
+  return json({
+    ok: true,
+    mode: "database",
+    migrated: saved.migrated,
+    migration: saved.migration,
+    data: { user: saved.value.auraUser, preferences: saved.value.preferences }
+  });
 }
 
 export default {
